@@ -100,7 +100,7 @@ def generate_pumping_ens(ann_pump, n, option):
 # For each well nest
 wellnestlist = ["LCBKK018"]
 # Path to access models/data
-path = os.path.abspath("models//ESMDA//all//na8ne250_pumpingcase")
+path = os.path.abspath("models//synthetic//na8ne250")
 
 # Reading
 fig_name1 = wellnestlist[0] + "_GWObs.csv"
@@ -206,7 +206,7 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models//ESMDA//all//na8ne250_pumpingcase")
+    mpath = os.path.abspath("models//synthetic//na8ne250")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1

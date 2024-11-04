@@ -115,7 +115,7 @@ def generate_pumping_ens(ann_pump, n, option):
 save_model = 1
 
 # Folder to save/import graph and model
-modelpath = os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA")
+modelpath = os.path.abspath("models//synthetic//na16ne250")
 
 # Pumping response function
 pump_rfunc = ps.Gamma()
@@ -287,7 +287,7 @@ for wells in well_names:
                     "_GW_" + calitime_min + "_" + calitime_max +
                     "_SYNBESTMODEL.pas")
 
-modelpath = os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA//perfect")
+modelpath = os.path.abspath("models//synthetic//na16ne250//perfect")
 
 # For all wells in well nest
 for wells in well_names:
@@ -362,7 +362,7 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA//perfect")
+    mpath = os.path.abspath("models//synthetic//na16ne250//perfect")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -533,7 +533,7 @@ dobs = dobs[1:]
 gw_obs_df = pd.concat(gw_obs_list)
 
 # Path to save models
-savepath = os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA")
+savepath = os.path.abspath("models//synthetic//na16ne250")
 
 # GW obs
 fig_name1 = wellnestlist[0] + "_GWObs.csv"
@@ -587,7 +587,7 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA")
+    mpath = os.path.abspath("models//synthetic//na16ne250")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -660,19 +660,6 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne, option)
 
-# Path to import old subsidence results
-path = os.path.abspath("models")
-
-# Reload object from file
-file2 = open(path + "\\" + wellnestname + "_500.pkl", "rb")
-model_sub = pickle.load(file2)
-file2.close()
-
-# Another option for clay heads
-h_ic = [x[7][:, -1] for x in model_sub["all_results"]]
-# Gets hidden clay groundwater state and time
-t_ic = [x[6] for x in model_sub["all_results"]]
-
 # Number of ensembles
 n = 1
 for n_ens in range(n):
@@ -707,8 +694,7 @@ for n_ens in range(n):
                                                            user_obs_indices=gw_obs_indices,
                                                            pump_ens=pumping_ens,
                                                            annual_pump=annual_pump,
-                                                           listdaily_pump=listdaily_pump,
-                                                           init_state=[t_ic, h_ic])
+                                                           listdaily_pump=listdaily_pump)
 
     # Get the approximated parameters
     averages = np.average(sub_m["mprior"][-1, :, :], axis=1)

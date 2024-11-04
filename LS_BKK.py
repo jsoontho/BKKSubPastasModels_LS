@@ -119,7 +119,7 @@ listdaily_pump = listdaily_pump[listdaily_pump.index <= "2023"]
 # Importing model
 
 # Folder to save/import graph and model
-modelpath = os.path.abspath("models//")
+modelpath = os.path.abspath("models//BKK//")
 
 # Total path
 tot_path = os.path.abspath("inputs")
@@ -268,7 +268,7 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models")
+    mpath = os.path.abspath("models//BKK//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -315,7 +315,7 @@ option = ["normal", .99]
 # Pumping error in prior
 pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
-pumping_ens = generate_pumping_ens(annual_pump, ne, option)
+pumping_ens = generate_pumping_ens(annual_pump, 1, option)
 
 # Number of ensembles
 n = 1
@@ -356,7 +356,7 @@ for n_ens in range(n):
 lmfit.fit_report(ls_sub_m)
 ls_sub_m.params.pretty_print()
 
-savepath = os.path.abspath("models//ESMDA//BKK//")
+savepath = os.path.abspath("models//BKK//ESMDA//na" + str(na) + "ne" + str(250))
 # save fit report to a file:
 with open(savepath + "//" + wellnestlist[0] + '_LS_REAL.txt', 'w') as fh:
     fh.write(lmfit.fit_report(ls_sub_m))

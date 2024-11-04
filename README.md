@@ -1,5 +1,5 @@
 # Models, data, and graphical results
-## for draft publication titled A data assimilation framework for improved pumping-induced subsidence estimation in data-scarce settings."
+## for draft publication titled "A data assimilation framework for improved pumping-induced subsidence estimation in data-scarce settings."
 ## Authors: Jenny T. Soonthornrangsan<sup>1</sup>, Femke C. Vossepoel<sup>1</sup>, Mark Bakker<sup>2</sup>
 ##### <sup>1</sup>Department of Geoscience & Engineering, Faculty of Civil Engineering and Geoscience, Delft University of Technology, Stevinweg 1, 2628 CN Delft, The Netherlands
 ##### <sup>2</sup>Department of Water Management, Faculty of Civil Engineering and Geoscience, Delft University of Technology, Stevinweg 1, 2628 CN Delft, The Netherlands

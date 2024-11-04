@@ -110,7 +110,7 @@ def generate_pumping_ens(ann_pump, n, option):
 # Importing model
 
 # Folder to save/import graph and model
-modelpath = os.path.abspath("models//")
+modelpath = os.path.abspath("models//BKK//")
 
 # Total path
 tot_path = os.path.abspath("inputs")
@@ -119,6 +119,7 @@ tot_path = os.path.abspath("inputs")
 # Model files
 modelfiles = os.listdir(modelpath)
 
+# Well nest of interest
 wellnestlist = ["LCBKK005"]
 
 Wellnest_name = wellnestlist[0]
@@ -264,7 +265,7 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models//")
+    mpath = os.path.abspath("models//BKK//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -324,19 +325,6 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne, option)
 
-# Path to import old subsidence results
-path = os.path.abspath("models")
-
-# Reload object from file
-file2 = open(path + "\\" + Wellnest_name + "_500.pkl", "rb")
-model_sub = pickle.load(file2)
-file2.close()
-
-# Another option for clay heads
-h_ic = [x[7][:, -1] for x in model_sub["all_results"]]
-# Gets hidden clay groundwater state and time
-t_ic = [x[6] for x in model_sub["all_results"]]
-
 # If number of assimilation windows > 1
 # Preallocation and separating obs into different windows
 if na_win > 1:
@@ -388,8 +376,7 @@ for n_ens in range(n):
                                                                user_obs_indices=gw_obs_indices,
                                                                pump_ens=pumping_ens,
                                                                annual_pump=annual_pump,
-                                                               listdaily_pump=listdaily_pump,
-                                                               init_state=[t_ic, h_ic])
+                                                               listdaily_pump=listdaily_pump)
 
         # Get the approximated parameters
         averages = np.average(sub_m["mprior"][-1, :, :], axis=1)
@@ -459,8 +446,7 @@ for n_ens in range(n):
                                                                    user_obs_indices=gw_obs_indices,
                                                                    pump_ens=pumping_ens,
                                                                    annual_pump=annual_pump,
-                                                                   listdaily_pump=listdaily_pump,
-                                                                   init_state=[t_ic, h_ic])
+                                                                   listdaily_pump=listdaily_pump)
 
             sub_m.append(temp_sub_m)
 
@@ -482,7 +468,7 @@ for n_ens in range(n):
 
     # Saving
     # Path to save models
-    path = os.path.abspath("models//ESMDA//BKK//na8ne1000//")
+    path = os.path.abspath("models//BKK//ESMDA//na8ne1000//")
 
     # Write
     for na_i in range(na+1):
