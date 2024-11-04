@@ -11,7 +11,7 @@ pumping time series, and subsidence multiplier parameters
 
 Best info is basin-wide pumping
 
-Code for running ESMDA is in "ESMDA_SyntheticOneWell"
+Code for running ESMDA is in "ESMDA_Synthetic"
 
 For well nest with multiple wells (ie multiple time series)
 
@@ -50,12 +50,12 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # %% Plotting
 
-wellnestlist = ["LCBKK038"]
+wellnestlist = ["LCBKK018"]
 
 Wellnest_name = wellnestlist[0]
 
 # Folder to save/import graph and model
-modelpath = os.path.abspath("models//")
+modelpath = os.path.abspath("models//BKK//")
 
 # Total path
 tot_path = os.path.abspath("inputs")
@@ -213,7 +213,7 @@ sub_m = {"dpred": np.zeros((na+1, len(sub_obs)+len(gw_obs),
                             ne))}
 
 # Path to save models
-modelpath = os.path.abspath("models//ESMDA//BKK//")
+modelpath = os.path.abspath("models//BKK//ESMDA//na" + str(na) + "ne" + str(ne))
 # Saving ESMDA results
 for na_i in range(na+1):
 
@@ -340,7 +340,7 @@ for well_i, wells in enumerate(well_names):
     time_maxs_plot.append(ptime_max)
 
 figpath = os.path.join(os.path.abspath("figures"),
-                       "ESMDA\\All_Pump_ANAD")
+                       "synthetic")
 
 plt.rc("font", size=12)  # controls default text size
 plt.rc("axes", titlesize=5)  # fontsize of the title
@@ -357,7 +357,7 @@ bkk_sub_gw.bkk_plotting.Pastas_results(models_plot, Wellnest_name,
 
 # save fit report to a file:
 with open(os.path.abspath(
-        "models//ESMDA//BKK//" +
+        "models//BKK//ESMDA//" +
         wellnestlist[0] + "_LS_REAL.txt"),
         'r') as fh:
     temp = fh.readlines()
@@ -462,7 +462,7 @@ for wellnest in wellnestlist:
 # simulated groundwater in the aquifers
 mode = "Pastas"
 
-modelpath = os.path.abspath("models//")
+modelpath = os.path.abspath("models//BKK//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
