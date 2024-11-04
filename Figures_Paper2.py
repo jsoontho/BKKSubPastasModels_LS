@@ -114,7 +114,7 @@ dist = ["norm", "norm", "norm", "norm"]
 
 wellnestlist = ["LCBKK018"]
 tot_path = os.path.abspath("inputs")
-modelpath = os.path.abspath("models//ESMDA//all//pumpingcaseANAD_perfect")
+modelpath = os.path.abspath("models//synthetic//perfectmodel//")
 files = wellnestlist
 
 for Wellnest_name in files:
@@ -325,7 +325,7 @@ plt.subplots_adjust(hspace=.3)
 
 # Saving figure
 # Path to save models
-figpath = os.path.abspath("figures//paper2")
+figpath = os.path.abspath("figures")
 fig.set_rasterized(True)
 fig_name1 = "Constantd_Pump_subPrior.png"
 full_figpath = os.path.join(figpath, fig_name1)
@@ -456,7 +456,7 @@ wellnest_list = []
 for wellnest in files:
 
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//")
+    modelpath = os.path.abspath("models//BKK//")
 
     # Total path
     tot_path = os.path.abspath("inputs")
@@ -598,7 +598,7 @@ for wellnest in files:
     n_pump = len(annual_pump)
 
     # Path to save models
-    modelpath = os.path.abspath("models//ESMDA//BKK//")
+    modelpath = os.path.abspath("models//BKK//ESMDA//na8ne250")
 
     # Number of subsidence parameters
     if p_multop[1] == "Sskv" or p_multop[1] == "K" or p_multop[1] == "Sske":
@@ -645,71 +645,6 @@ for wellnest in files:
     ens_mresults["mprior"] = []
     averages = np.average(sub_m["mprior"][-1, :, :], axis=1)
     ens_mresults["mprior"].append(averages)
-
-    # # Pumping index
-    # pump_index0 = n_param*num_wells
-    # pump_index1 = n_param*num_wells + n_pump
-
-    # # For all wells in well nest
-    # for well_i, wells in enumerate(well_names):
-
-    #     # Name of well as a string
-    #     well_name = wells
-    #     #######################################################################
-
-    #     mean_dict = {}
-    #     meanpastas_dict = {}
-    #     meansub_dict = {}
-
-    #     for num_ens, ens in enumerate(ens_mresults[
-    #             str(list(ens_mresults.keys())[-1])]):
-    #         if num_ens == 0:
-
-    #             # Initializing pumping, pastas, sub dictionaries
-    #             for pump_i in range(pump_index0, pump_index1):
-    #                 mean_dict[str(pump_i)] = []
-
-    #             for pastas_i in range(n_param*num_wells):
-    #                 meanpastas_dict[str(pastas_i)] = []
-
-    #             for sub_i in range(pump_index1, pump_index1+n_sub):
-    #                 meansub_dict[str(sub_i)] = []
-
-    #         for param_i, param in enumerate(ens):
-
-    #             # If pastas parameters
-    #             if param_i < (num_wells)*n_param:
-    #                 meanpastas_dict[str(param_i)].append(param)
-    #             # If pumping
-    #             elif param_i >= (num_wells)*n_param and param_i < (pump_index1):
-
-    #                 mean_dict[str(param_i)].append(param)
-
-    #             # Sub
-    #             elif param_i >= (pump_index1) and param_i < pump_index1+n_sub:
-    #                 meansub_dict[str(param_i)].append(param)
-
-    #     # Mean time series to mean complete time series
-    #     # Adds new pumping
-    #     # Taking mean of the ensemble
-    #     pump_mean = [sum(element) / len(element)
-    #                  for element in mean_dict.values()]
-
-    #     mean_ = pd.Series(pump_mean)
-    #     mean_.index = annual_pump.index
-
-    #     # Isolating pumping data
-    #     pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-    #                            columns=["0"])
-    #     pump_df.index = annual_pump.index
-    #     df = pd.DataFrame(index=listdaily_pump.index)
-    #     df = pd.concat([df, pump_df], join="outer",
-    #                    keys=["Date", "Date"], axis=1)
-    #     df.columns = df.columns.droplevel()
-
-    #     # Interpolating pumping data
-    #     pump_interp = df.interpolate(method="cubic")
-    #     pump_interp = pump_interp.dropna()
 
     # Calculating rmse for sub
     # add rsq to simulation
@@ -776,7 +711,7 @@ data_lim = [.4, 3.9]
 plt.set_cmap("coolwarm")  # Color map colors
 
 # Plots
-figpath = os.path.abspath("figures//paper2")
+figpath = os.path.abspath("figures")
 map = Basemap(llcrnrlon=100.3, llcrnrlat=13.4, urcrnrlon=100.8, urcrnrlat=14,
               resolution="h", ellps="WGS84", lat_0=13.6, lon_0=100.4)
 bkk_sub_gw.bkk_plotting.draw_basemap(map, xs, ys, cs, fig=fig, ax=ax,
@@ -810,7 +745,7 @@ wellnest_list = []
 for wellnest in files:
 
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//")
+    modelpath = os.path.abspath("models//BKK//")
 
     # Total path
     tot_path = os.path.abspath("inputs")
@@ -952,7 +887,7 @@ for wellnest in files:
     n_pump = len(annual_pump)
 
     # Path to save models
-    modelpath = os.path.abspath("models//ESMDA//BKK//")
+    modelpath = os.path.abspath("models//BKK//ESMDA//na8ne250//")
 
     # Number of subsidence parameters
     if p_multop[1] == "Sskv" or p_multop[1] == "K" or p_multop[1] == "Sske":
@@ -1049,18 +984,18 @@ for wellnest in files:
         # Adds new pumping
         # Taking mean of the ensemble
         pump_mean = [sum(element) / len(element)
-                      for element in mean_dict.values()]
+                     for element in mean_dict.values()]
 
         mean_ = pd.Series(pump_mean)
         mean_.index = annual_pump.index
 
         # Isolating pumping data
         pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-                                columns=["0"])
+                               columns=["0"])
         pump_df.index = annual_pump.index
         df = pd.DataFrame(index=listdaily_pump.index)
         df = pd.concat([df, pump_df], join="outer",
-                        keys=["Date", "Date"], axis=1)
+                       keys=["Date", "Date"], axis=1)
         df.columns = df.columns.droplevel()
 
         # Interpolating pumping data
@@ -1116,7 +1051,7 @@ for x, y in zip(gwwell_locs.Long, gwwell_locs.Lat):
             xs.append(x)
             ys.append(y)
             cs.append(well_data[well_data.index(label[0])+2])
-#%%
+
 # Plot settings
 # Initializing figure
 fig, ax = plt.subplots(figsize=(3.2, 2.2), dpi=400)
@@ -1124,7 +1059,7 @@ fig, ax = plt.subplots(figsize=(3.2, 2.2), dpi=400)
 data_lim = [100, 300]
 
 plt.set_cmap("Purples_r")  # Color map colors
-figpath = os.path.abspath("figures//paper2")
+figpath = os.path.abspath("figures")
 # Plots
 map = Basemap(llcrnrlon=100.3, llcrnrlat=13.4, urcrnrlon=100.8, urcrnrlat=14,
               resolution="h", ellps="WGS84", lat_0=13.6, lon_0=100.4)
@@ -1210,6 +1145,7 @@ data = pd.read_excel(full_path, skiprows=3)
 
 # Importing model
 # Model files
+modelpath = os.path.abspath("models//BKK")
 modelfiles = os.listdir(modelpath)
 
 # Groundwater observations
@@ -1306,13 +1242,13 @@ elif p_multop[1] == "all":
     n_sub = 3
 
 # For each path (na)
-modelpaths = [os.path.abspath("models//ESMDA//BKK//na1ne250//"),
-              os.path.abspath("models//ESMDA//BKK//na2ne250//"),
-              os.path.abspath("models//ESMDA//BKK//na3ne250//"),
-              os.path.abspath("models//ESMDA//BKK//na7ne250//"),
-              os.path.abspath("models//ESMDA//BKK//"),
-              os.path.abspath("models//ESMDA//BKK//na9ne250//"),
-              os.path.abspath("models//ESMDA//BKK//na16ne250//"),]
+modelpaths = [os.path.abspath("models//BKK//ESMDA//na1ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na2ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na3ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na7ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na8ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na9ne250//"),
+              os.path.abspath("models//BKK//ESMDA//na16ne250//"),]
 
 nas = [1, 2, 3, 7, 8, 9, 16]
 
@@ -1374,7 +1310,7 @@ plt.xlabel("$N_{mda}$ (total number of ESMDA iterations)")
 plt.ylabel("Subsidence RMSE (cm/yr)")
 
 # Saving
-figpath = os.path.abspath("figures//paper2")
+figpath = os.path.abspath("figures")
 fig_name1 = wellnest + "_sub_nas_rmses.png"
 full_figpath = os.path.join(figpath, fig_name1)
 plt.savefig(full_figpath, bbox_inches="tight", format="png")
@@ -1391,12 +1327,12 @@ wellnestlist = ["LCBKK011"]
 Wellnest_name = wellnestlist[0]
 
 # For each path (na)
-modelpaths = [os.path.abspath("models//ESMDA//all//na1ne250_pumpingcase_NA//"),
-              os.path.abspath("models//ESMDA//all//na2ne250_pumpingcase_NA//"),
-              os.path.abspath("models//ESMDA//all//na3ne250_pumpingcase_NA//"),
-              os.path.abspath("models//ESMDA//all//na8ne250_pumpingcase_NA//"),
-              os.path.abspath("models//ESMDA//all//na9ne250_pumpingcase_NA//"),
-              os.path.abspath("models//ESMDA//all//na16ne250_pumpingcase_NA//"),]
+modelpaths = [os.path.abspath("models//synthetic//na1ne250//"),
+              os.path.abspath("models//synthetic//na2ne250//"),
+              os.path.abspath("models//synthetic//na3ne250//"),
+              os.path.abspath("models//synthetic//na8ne250//"),
+              os.path.abspath("models//synthetic//na9ne250//"),
+              os.path.abspath("models//synthetic//na16ne250//"),]
 
 nas = [1, 2, 3, 8, 9, 16]
 
@@ -1548,7 +1484,7 @@ plt.xlabel("$N_{mda}$ (total number of ESMDA iterations)")
 plt.ylabel("Subsidence RMSE (cm/yr)")
 
 # Saving
-figpath = os.path.abspath("figures//paper2")
+figpath = os.path.abspath("figures")
 fig_name1 = wellnest + "_sub_nas_rmses.png"
 full_figpath = os.path.join(figpath, fig_name1)
 plt.savefig(full_figpath, bbox_inches="tight", format="png")
