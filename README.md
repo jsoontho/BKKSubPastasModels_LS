@@ -16,17 +16,19 @@ Libraries:
 
 Various python scripts are provided that create different graphical results.
 
-- `Figures.py`: Produces the figures shown in the main text of the paper
+- `Figures_Paper2.py`: Produces the figures shown in the main text of the paper
 
-- `SubsidenceModelResults_1978-2020.py`: Computes land subsidence at each well nest location. Plots annual subsidence rates (cm) bar graphs during 1978-2020 (Shown in the main text and supplemental information), error maps (subsidence RMSE for each well nest), forecast maps (2020-2060 in cm), sensitivity analysis (LCBKK013 for parameter sets Sske (clay), Sske (sand), Sskv (clay), K (clay), thickness; long run time so only calculating for one well nest at a time) (Shown in Supplemental Information)
-  - Notebook version: https://githubtocolab.com/jsoontho/BKKSubPastasModels/blob/main/JupyterNotebooks/SubsidenceModelResults_1978-2020.ipynb
+- `ESMDA_BKK.py`: Runs ESMDA algorithm using real observations for well nests in BKK
 
-- `Pastas_ModelGraphs_1950-2020.py`: Creates Pastas models with the option to save and import the model as well as produces graphical results shown in the paper and supplemental information. Models simulate groundwater for each well nest
-  - Notebook version: https://githubtocolab.com/jsoontho/BKKSubPastasModels/blob/main/JupyterNotebooks/Pastas_ModelGraphs_1950-2020.ipynb
-  
-- `Pastas_ResultsMaps_1950-2020.py`: Creates spatial maps that show the groundwater RMSE and t<sub>90</sub> results for each well in each well nest. Imports previously created Pastas models
-  - Notebook version: https://githubtocolab.com/jsoontho/BKKSubPastasModels/blob/main/JupyterNotebooks/Pastas_ResultsMaps_1950-2020.ipynb
+- `ESMDA_Synthetic.py`: Runs ESMDA algorithm using synthetic observations for well nests. Script also generates the synthetic observations.
 
+- `LS_BKK.py`: Runs least squares algorithm using real observations for well nests in BKK
+
+- `LS_Synthetic.py`: Runs least squares algorithm using the same synthetic observations from ESMDA
+
+- `Plot_ESMDA_LS_BKK.py`: Plots the results of the ESMDA and LS runs for the real experiment for well nests in BKK
+
+- `Plot_ESMDA_LS_Synthetic.py`: Plots the results of the ESMDA and LS runs for the synthetic experiments for well nests
 
 <br />
 <br />
@@ -36,7 +38,7 @@ Various python scripts are provided that create different graphical results.
 
 `figures_test\`: figures used in publication to be compared to output figures from script. Should match.
 
-`models\`: Pastas models created from Pastas_ModelGraphs_1950-2020.py script (Model files end with .pas)
+`models\`: ESMDA/LS results created from ESMDA_BKK.py, ESMDA_Synthetic.py, LS_Synthetic.py, and LS_BKK.py script. Model outputs in Dpred files for each ESMDA step, parameters in Mprior files for each ESMDA step
 
 `inputs\`: inputs needed for scripts 
 
