@@ -3325,7 +3325,8 @@ def forward_gwparam_subSELECT_pump_my(p, wellnestlist, Pastasfiles, lenfiles,
         newmodels.append(model)
 
     # Saving pumping data
-    pumping_data.append(p[num_wells*n_param:num_wells*n_param+n_pump])
+    temp_pump = p[num_wells*n_param:num_wells*n_param+n_pump].astype(float)
+    pumping_data.append(np.exp(temp_pump))
 
     # Pumping ensemble
     pumping_series = pd.DataFrame(pumping_data)
@@ -4012,7 +4013,8 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
                                       hidstate_t=None, hidstate=None,
                                       params_i=None,
                                       other_params=None,
-                                      others_i=None):
+                                      others_i=None,
+                                      lambda_=None):
     """Running pastas and subsidence model for esmda
     Selected parameters from gw and subsidence + pumping + clay heads
 
@@ -4222,21 +4224,21 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
 
             for other_i, other in enumerate(other_name):
                 # Sets to optimal param
-                # model.set_parameter(name=other,
-                #                     initial=other_params[model_i][others_i[other_i]],
-                #                     optimal=other_params[model_i][others_i[other_i]])
+                model.set_parameter(name=other,
+                                    initial=other_params[model_i][others_i[other_i]],
+                                    optimal=other_params[model_i][others_i[other_i]])
                 # Sets to true value
                 # Set to the truth
-                if other == "well_A":
+                # if other == "well_A":
 
-                    model.set_parameter(name=other,
-                                        initial=-.1,
-                                        optimal=-.1)
-                elif other == "constant_d":
+                #     model.set_parameter(name=other,
+                #                         initial=-.1,
+                #                         optimal=-.1)
+                # elif other == "constant_d":
 
-                    model.set_parameter(name=other,
-                                        initial=2,
-                                        optimal=2)
+                #     model.set_parameter(name=other,
+                #                         initial=2,
+                #                         optimal=2)
 
         # Saving new models with new parameters
         newmodels.append(model)
@@ -4246,7 +4248,7 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
 
     for pump_i in range(n_pump):
 
-        pumping_data.append(v["pump"+str(pump_i)])
+        pumping_data.append(np.exp(v["pump"+str(pump_i)]))
 
     # Pumping ensemble
     pumping_series = pd.DataFrame(pumping_data)
@@ -4375,12 +4377,24 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
 
     # Calculating residuals
     # All
-    resid = d_pred - dobs
+    resid_head = d_pred - dobs
+    resid_pump = pump_interp.iloc[:, -1] - daily_date_pump.Pump
+
+    pump_var = daily_date_pump.Pump.var(skipna=True)
+    if pump_var == 0.0:
+
+        pump_var = .1*daily_date_pump.Pump
 
     # # Cost function
     # # Jx = .5 * resid.T @ np.linalg.pinv(ce) @ resid
-    Jx = resid/obs_var
+    if lambda_ is None:
 
+        lambda_ = 0
+
+    firstterm = resid_head**2/obs_var
+    secondterm = lambda_*(resid_pump**2/pump_var)
+    Jx = firstterm + secondterm[firstterm.index]
+    # Jx = firstterm
     # GW/ SUb separate
     # sub_resid = (d_pred[0:nd_sub] - dobs.iloc[0:nd_sub])/(
     #     obs_var[0:nd_sub] * nd_sub)
@@ -5040,7 +5054,8 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                    user_obs_indices=None,
                    dist="norm", pump_ens=None,
                    annual_pump=None, listdaily_pump=None,
-                   user_models=None, init_state=None):
+                   user_models=None, init_state=None,
+                   lambda_=None):
     """Calculate sub for four clay layers and four confined aquifers.
 
     wellnestlist - list of wellnest to calculate subsidence for
@@ -5075,6 +5090,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
     pumping_ens - df with ens of pumping time series
     like_sigma - SD of likelihood dist
     init_state - user provided initial state for state estimation (DA)
+    lambda_ - LS regularized lambda
 
     The data sets have specific names for clays and aquifers
     Thick_data - thickness of clay and aquifers
@@ -5525,7 +5541,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                 param_index = esmdaindex
 
                 # Renaming pumping ensemble
-                pumping_ens = pump_ens
+                pumping_ens = np.log(pump_ens)
 
                 # Initial samples of parameters
                 # should be [nm x ne]
@@ -5687,7 +5703,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                 n_pump = len(annual_pump)
 
                 # Saving confidence of pumping
-                par_pump = np.ones(n_pump) * 30
+                par_pump = np.ones(n_pump) * np.log(30)
 
                 # Confidence of gw
                 # Taking parameter confidence of gw
@@ -5698,7 +5714,8 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                     # Saving all confidence
                     par_error = par_conf_gw.tolist() + par_pump.tolist() + \
                         par_error_sub
-                    mins = np.append(min_pastas[0, param_index], np.zeros(n_pump))
+                    mins = np.append(min_pastas[0, param_index],
+                                     np.repeat(np.log(1E-10), n_pump))
 
                 else:
                     par_error = par_conf_gw.tolist()
@@ -5713,7 +5730,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                     for n_models in range(len(models)-2):
 
                         mins = np.append(mins, min_pastas[0, param_index])
-                    mins = np.append(mins, np.zeros(n_pump))
+                    mins = np.append(mins, np.repeat(np.log(1E-10), n_pump))
 
                 # Adding sub param
                 mins = np.append(mins, parambound.loc[
@@ -5723,14 +5740,15 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                 # mins = np.append(mins, state_mins)
                 # Adding pastas param and pumping
                 if len(models) == 1:
-                    maxs = np.append(max_pastas[0, param_index], np.repeat(5E2, n_pump))
+                    maxs = np.append(max_pastas[0, param_index],
+                                     np.repeat(np.log(5E2), n_pump))
                 else:
                     maxs = np.append(max_pastas[0, param_index],
                                      max_pastas[0, param_index])
                     for n_models in range(len(models)-2):
 
                         maxs = np.append(maxs, max_pastas[0, param_index])
-                    maxs = np.append(maxs, np.repeat(5E2, n_pump))
+                    maxs = np.append(maxs, np.repeat(np.log(5E2), n_pump))
 
                 # Adding sub param
                 maxs = np.append(maxs, parambound.loc[
@@ -5827,9 +5845,9 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                 for pump_i in range(n_pump):
                     params.add(
                         name="pump"+str(pump_i),
-                        value=pumping_ens.iloc[pump_i, 0],
-                        min=0,
-                        max=500)
+                        value=np.log(pumping_ens.iloc[pump_i, 0]),
+                        min=np.log(1e-10),
+                        max=np.log(500))
 
                 # PARAMETER BOUNDARIES!
                 # parambound_path = os.path.join(os.path.abspath("inputs"),
@@ -5953,7 +5971,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                                            None, None,
                                            param_index,
                                            pastas_optparam,
-                                           other_i))
+                                           other_i, lambda_))
 
                 # Returns ESMDA solver and pastas models
                 return out, models, well_names

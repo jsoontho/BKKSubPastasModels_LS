@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import lmfit
+import time
 
 # Bangkok Subsidence Model Package
 import bkk_sub_gw
@@ -39,6 +40,9 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # %%##########################################################################
 # Generate ensemble of pumping time series settings
 ###############################################################################
+
+st = time.time()
+st2 = time.process_time()
 
 
 def generate_pumping_ens(ann_pump, n, option):
@@ -63,31 +67,38 @@ def generate_pumping_ens(ann_pump, n, option):
     ann_pump.index = pd.to_datetime(ann_pump.index)
     df = pd.DataFrame(index=ann_pump.index)
 
+    # Ann pump log
+    ann_log = ann_pump.copy()
+    ann_log.Pump = np.log(ann_log.Pump)
+    ann_log.Std = abs(.1 * ann_log.Pump)
+
     # For each ensemble member (each consisting of a time series)
     for i in range(n):
 
         temp_list = []
 
-        # Taking from normal distriubtion
         if option[0] == "normal":
 
             # For each t
             for t in range(n_pump):
 
-                # Mean, std
-                temp = np.random.normal(ann_pump.iloc[t, 1],
-                                        ann_pump.iloc[t, 2])
+                # Choosing between normal distribution
+                # (mean, std)
+                temp = np.random.normal(ann_log.iloc[t, 1],
+                                        ann_log.iloc[t, 2])
 
-                # Make sure temp is > 0
-                if temp < 0:
+                # Make sure temp is > 0 or < 500
+                if np.exp(temp) < 0:
 
-                    temp_list.append(0)
+                    temp_list.append(np.log(0))
+                if np.exp(temp) > 500:
 
+                    temp_list.append(np.log(500))
                 else:
 
                     temp_list.append(temp)
-
-        # Formatting
+        # EXP
+        temp_list = np.exp(temp_list)
         mat = pd.DataFrame(temp_list, index=ann_pump.index,
                            columns=[i])
         df = pd.concat([df, mat], join="outer",
@@ -99,8 +110,18 @@ def generate_pumping_ens(ann_pump, n, option):
 
 # For each well nest
 wellnestlist = ["LCBKK018"]
-# Path to access models/data
-path = os.path.abspath("models//synthetic//na8ne250")
+
+pumpexperiment = "pumpingcase1"
+
+if pumpexperiment == "pumpingcase1":
+    # Folder to save/import graph and model
+    path = os.path.abspath("models//ESMDA//bangkok-based//")
+
+# Cyclical pump
+elif pumpexperiment == "cyclical":
+    # Folder to save/import graph and model
+    path = os.path.abspath("models//cyclical//")
+
 
 # Reading
 fig_name1 = wellnestlist[0] + "_GWObs.csv"
@@ -162,21 +183,38 @@ ntrue = 2.5
 atrue = 50
 dtrue = 2
 
+# Calibration period
+calitime_min = "1978"
+calitime_max = "2005"
+
 # Creating observations for LS
 dobs = pd.Series(np.empty(1, dtype=object))
-dobs = pd.concat([dobs, sub_obs.iloc[:, -1]])
-dobs = pd.concat([dobs, gw_obs.iloc[:, -1]])
+tempdata = sub_obs[sub_obs.index <= "1996"].iloc[:, -1]
+dobs = pd.concat([dobs, tempdata])
+# Saving gw dates
+gw_obs_indices = [tempdata.index]
+tempdata = gw_obs[gw_obs.index <= calitime_max].iloc[:, -1]
+tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
+dobs = pd.concat([dobs, tempdata])
 dobs = dobs[1:]
 
-# Saving gw dates
-gw_obs_indices = [sub_obs.Date]
+# Reading in groundwater data
+# Total path
+tot_path = os.path.abspath("inputs")
+full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
+data = pd.read_excel(full_path, skiprows=3)
 
-num_wells = int(len(gw_obs)/300)
+# Well names
+well_names = data.columns[-(len(data.columns)-2):]
+num_wells = len(well_names)
 
 for well_i in range(num_wells):
 
-    gw_obs_indices.append(gw_obs.Date[well_i*int(
-        len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)])
+    tempdata = gw_obs.Date[well_i*int(
+        len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
+    tempdata = tempdata[tempdata <= calitime_max]
+    tempdata = tempdata[tempdata >= calitime_min]
+    gw_obs_indices.append(tempdata)
 
 Wellnest_name = wellnestlist[0]
 
@@ -206,7 +244,14 @@ mode = "Pastas"
 # If mode is Pastas, need model path
 if mode == "Pastas":
 
-    mpath = os.path.abspath("models//synthetic//na8ne250")
+    if pumpexperiment == "pumpingcase1":
+        # Folder to save/import graph and model
+        mpath = os.path.abspath("models//bangkok-based//")
+
+    # Cyclical pump
+    elif pumpexperiment == "cyclical":
+        # Folder to save/import graph and model
+        mpath = os.path.abspath("models//cyclical//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -255,6 +300,7 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne, option)
 
+lambda_ = 15
 # Number of ensembles
 n = 1
 for n_ens in range(n):
@@ -289,11 +335,20 @@ for n_ens in range(n):
                                                            user_obs_indices=gw_obs_indices,
                                                            pump_ens=pumping_ens,
                                                            annual_pump=annual_pump,
-                                                           listdaily_pump=listdaily_pump)
+                                                           listdaily_pump=listdaily_pump,
+                                                           lambda_=lambda_)
 
 lmfit.fit_report(ls_sub_m)
 ls_sub_m.params.pretty_print()
 
 # save fit report to a file:
-with open(mpath + "//" + wellnestlist[0] + '_LS_modelresult.txt', 'w') as fh:
+with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
+          str(lambda_) + '_modelresult.txt', 'w') as fh:
     fh.write(lmfit.fit_report(ls_sub_m))
+
+et = time.time()
+et2 = time.process_time()
+elapse_time = et - st
+elapse_time2 = et2 - st2
+print('Execution time:', elapse_time/(60*60), 'hours')
+print('CPU Execution time:', elapse_time2/(60*60), 'hours')
