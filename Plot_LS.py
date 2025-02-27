@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Sep 12 10:47:1 2024
 
@@ -47,7 +46,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # True parameters for Pastas and subsidence mult (a, b, c)
 Atrue = -.1
-ntrue = 2.5
+ntrue = 1.2
 atrue = 50
 dtrue = 2
 

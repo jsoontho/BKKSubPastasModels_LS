@@ -1,0 +1,3 @@
+lambda=0
+Execution time: 0.3864043518569734 hours
+CPU Execution time: 0.38776909722222225 hours

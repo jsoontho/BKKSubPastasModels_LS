@@ -1,0 +1,31 @@
+lambda = 0
+Execution time: 5.874344484474924 hours
+CPU Execution time: 5.847712673611111 hours
+
+lambda = .1
+Execution time: 25.352279817528196 hours
+CPU Execution time: 24.280755208333332 hours
+
+lambda = .2
+Execution time: 3.9389469634162055 hours
+CPU Execution time: 3.9181423611111112 hours
+
+lambda = .25
+Execution time: 7.539929992622799 hours
+CPU Execution time: 7.49203125 hours
+
+lambda = .3
+Execution time: 24.881750007602903 hours
+CPU Execution time: 21.251150173611112 hours
+
+lambda = .31
+Execution time: 4.605461105306944 hours
+CPU Execution time: 4.566766493055556 hours
+
+lambda = .35
+Execution time: 4.4033485401339005 hours
+CPU Execution time: 4.403315972222222 hours
+
+lambda = .5
+Execution time: 10.577480423516697 hours
+CPU Execution time: 10.516966145833333 hours

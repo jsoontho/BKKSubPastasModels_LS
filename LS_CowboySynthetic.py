@@ -144,12 +144,6 @@ listdaily_pump = listdaily_pump[listdaily_pump.index <= "2023"]
 importing = 0
 saving = 1
 
-# True parameters
-Atrue = -.1
-ntrue = 2.5
-atrue = 50
-dtrue = 2
-
 # Calibration period
 calitime_min = "1978"
 calitime_max = "2005"
@@ -263,7 +257,7 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne)
 
-lambda_ = 0
+lambda_ = 0.31
 # Number of ensembles
 n = 1
 for n_ens in range(n):

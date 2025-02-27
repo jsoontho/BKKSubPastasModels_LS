@@ -45,13 +45,13 @@ st = time.time()
 st2 = time.process_time()
 
 
-def generate_pumping_ens(ann_pump, n, option):
+def generate_pumping_ens(ann_pump, n, pumpexperiment):
     """Generates ensemble of time series of groundwater pumping.
 
     Input:
     ann_pump - annual pumping rates (initial, mean) + std
     n - number of ensemble members
-    option - AR for error or completely random within normal dist
+    pumpexperiment - which pumping experiment
 
     Returns:
     interp_pump - list_dates with interpolated pumping m3/day
@@ -75,35 +75,34 @@ def generate_pumping_ens(ann_pump, n, option):
     # For each ensemble member (each consisting of a time series)
     for i in range(n):
 
-        temp_list = []
+        # Bangkok experiment
+        if pumpexperiment == "pumpingcase1":
 
-        if option[0] == "normal":
+            temp = ann_log.copy()
+            temp[ann_log.index >= "1991"].Pump = ann_log.Pump[
+                ann_log.index >= "1991"] * 1.5
+            temp.Pump[temp.index <= "1985"] = temp.Pump[temp.index <= "1985"] / 2
+            temp_list = np.exp(temp.Pump)
+            mat = temp_list.to_frame()
 
-            # For each t
-            for t in range(n_pump):
+            df = pd.concat([df, mat], join="outer",
+                           keys=["Date", "Date"], axis=1)
+            df.columns = df.columns.droplevel()
 
-                # Choosing between normal distribution
-                # (mean, std)
-                temp = np.random.normal(ann_log.iloc[t, 1],
-                                        ann_log.iloc[t, 2])
+        elif pumpexperiment == "cyclical":
 
-                # Make sure temp is > 0 or < 500
-                if np.exp(temp) < 0:
+            length = len(ann_pump.index)
+            my_wave = np.log((np.sin(np.arange(0, length, 1) - np.pi) + 1) * 25)
+            temp_list = my_wave
 
-                    temp_list.append(np.log(0))
-                if np.exp(temp) > 500:
+            # EXP
+            temp_list = np.exp(temp_list)
+            mat = pd.DataFrame(temp_list, index=ann_pump.index,
+                               columns=[i])
 
-                    temp_list.append(np.log(500))
-                else:
-
-                    temp_list.append(temp)
-        # EXP
-        temp_list = np.exp(temp_list)
-        mat = pd.DataFrame(temp_list, index=ann_pump.index,
-                           columns=[i])
-        df = pd.concat([df, mat], join="outer",
-                       keys=["Date", "Date"], axis=1)
-        df.columns = df.columns.droplevel()
+            df = pd.concat([df, mat], join="outer",
+                           keys=["Date", "Date"], axis=1)
+            df.columns = df.columns.droplevel()
 
     return df
 
@@ -115,7 +114,7 @@ pumpexperiment = "pumpingcase1"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//ESMDA//bangkok-based//")
+    path = os.path.abspath("models//bangkok-based//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -179,7 +178,7 @@ saving = 1
 
 # True parameters
 Atrue = -.1
-ntrue = 2.5
+ntrue = 1.2
 atrue = 50
 dtrue = 2
 
@@ -298,9 +297,17 @@ option = ["normal", .99]
 # Pumping error in prior
 pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
-pumping_ens = generate_pumping_ens(annual_pump, ne, option)
+pumping_ens = generate_pumping_ens(annual_pump, ne, pumpexperiment)
 
-lambda_ = 15
+if pumpexperiment == "pumpingcase1":
+    comppump = listdaily_pump.copy()
+    comppump = comppump[comppump.index <= "2023"]
+
+# Cyclical pump
+elif pumpexperiment == "cyclical":
+    comppump = generate_pumping_ens(annual_pump, ne, option)
+
+lambda_ = .6
 # Number of ensembles
 n = 1
 for n_ens in range(n):
@@ -335,7 +342,7 @@ for n_ens in range(n):
                                                            user_obs_indices=gw_obs_indices,
                                                            pump_ens=pumping_ens,
                                                            annual_pump=annual_pump,
-                                                           listdaily_pump=listdaily_pump,
+                                                           listdaily_pump=comppump,
                                                            lambda_=lambda_)
 
 lmfit.fit_report(ls_sub_m)
@@ -343,7 +350,7 @@ ls_sub_m.params.pretty_print()
 
 # save fit report to a file:
 with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
-          str(lambda_) + '_modelresult.txt', 'w') as fh:
+          str(lambda_*100) + '_modelresult.txt', 'w') as fh:
     fh.write(lmfit.fit_report(ls_sub_m))
 
 et = time.time()

@@ -158,7 +158,7 @@ def gamma_block(A, n, a, cutoff=0.999):
 
 # True parameters for Pastas and subsidence mult (a, b, c)
 Atrue = -.1
-ntrue = 2.5
+ntrue = 1.2
 atrue = 50
 dtrue = 2
 
@@ -248,13 +248,13 @@ for wells in well_names:
 
     full_obshead = head_pump_noise.copy()
 
-    # Random heads for only sample size
-    obs_sample = 500
-    full_obshead = full_obshead.sample(obs_sample).sort_index()
-
     # Head with noise within certain years
-    head_pump_noise = full_obshead[np.logical_and(
-        full_obshead.index >= calitime_min, full_obshead.index <= calitime_max)]
+    head_pump_noise = head_pump_noise[np.logical_and(
+        head_pump_noise.index >= calitime_min, head_pump_noise.index <= calitime_max)]
+
+    # Random heads for only sample size
+    obs_sample = 300
+    head_pump_noise = head_pump_noise.sample(obs_sample).sort_index()
 
     gw_obs_list.append(full_obshead)
 
@@ -532,8 +532,8 @@ for num_well, wellnest in enumerate(wellnestlist):
             if any(matchdate):
 
                 obssyndata[wellnest][idx] = plot_data.AnnRates[
-                    matchdate] + random.uniform(0, sub_error *
-                                                np.mean(plot_data.AnnRates))
+                    matchdate] + np.random.normal(0, abs(sub_error *
+                                                  np.mean(plot_data.AnnRates)))
 
     syndata["Year"] = syndata.index.year
     syndata = syndata.rename(columns={wellnest: 'Land_' + wellnest})

@@ -3837,7 +3837,8 @@ def forwardls_gwparamSELECT_pump(p, models,
                                  pump_sheet=None,
                                  params_i=None,
                                  other_params=None,
-                                 others_i=None):
+                                 others_i=None,
+                                 lambda_=None):
     """Running pastas model for least squares with only some parameters
     and pumping
 
@@ -3982,12 +3983,24 @@ def forwardls_gwparamSELECT_pump(p, models,
         # Renaming for second merge
         plot_data = plot_data.rename(columns={"AnnRates ": "Simulation0"})
 
-    # Calculating residuals
-    resid = d_pred - dobs
+    # Residual
+    resid_head = d_pred - dobs
+    resid_pump = pump_interp.iloc[:, -1] - daily_date_pump.Pump
 
-    # Cost function
-    # Jx = .5 * resid.T @ np.linalg.pinv(ce) @ resid
-    Jx = resid/obs_var
+    pump_var = daily_date_pump.Pump.var(skipna=True)
+    if pump_var == 0.0:
+
+        pump_var = .1*daily_date_pump.Pump
+
+    # # Cost function
+    # # Jx = .5 * resid.T @ np.linalg.pinv(ce) @ resid
+    if lambda_ is None:
+
+        lambda_ = 0
+
+    firstterm = resid_head**2/obs_var
+    secondterm = lambda_*(resid_pump**2/pump_var)
+    Jx = firstterm + secondterm[firstterm.index]
 
     return Jx
 
@@ -4394,6 +4407,571 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
     firstterm = resid_head**2/obs_var
     secondterm = lambda_*(resid_pump**2/pump_var)
     Jx = firstterm + secondterm[firstterm.index]
+    # Jx = firstterm
+    # GW/ SUb separate
+    # sub_resid = (d_pred[0:nd_sub] - dobs.iloc[0:nd_sub])/(
+    #     obs_var[0:nd_sub] * nd_sub)
+    # gw_resid = (d_pred[nd_sub:] - dobs.iloc[nd_sub:])/(
+    #     obs_var[nd_sub:] * nd_gw)
+    # Jx = pd.concat([sub_resid, gw_resid])
+
+    return Jx
+
+
+def forward_gwparam_subSELECT_ls(p, wellnestlist, Pastasfiles, lenfiles,
+                                 proxyflag, model_path, pumpflag,
+                                 mode, tmin, tmax,
+                                 Thick_data, K_data, Sskv_data,
+                                 Sske_data, CC,
+                                 Nz, num_clay, all_well4_data,
+                                 well_data_dates,
+                                 wellnest,
+                                 SS_data, p_multop,
+                                 ic_run, return_sub, dobs,
+                                 gw_obs_indices, models,
+                                 well_names,
+                                 n_pump, annual_date_pump,
+                                 daily_date_pump, nd_sub, nd_gw, obs_var,
+                                 initoptiparam=None,
+                                 pump_path=None,
+                                 pump_sheet=None,
+                                 pump_series=None,
+                                 hidstate_t=None, hidstate=None,
+                                 params_i=None,
+                                 other_params=None,
+                                 others_i=None,
+                                 lambda_=None):
+    """Running pastas and subsidence model for esmda
+    Selected parameters from gw and subsidence + pumping + clay heads
+
+
+    p - list of param multiplers (1 for Sskv, 2 for Sske, 3 for K)
+    wellnestlist - list of wellnest to calculate subsidence for
+    mode - raw groundwater data or time series from pastas (raw needs to
+    to be interpolated). options: raw, pastas
+    tmin, tmax - (str) minimum and maximum year to calculate sub
+    CC - convergence criteria
+    Nz - number of nodes in the z direction
+    ic_run - True or false to generate initial condition run for clays
+    proxyflag - 1 if using available heads as proxy for missing heads
+    pumpflag - 1 if changing pumping scenario for Pastas
+    model_path - path to python models
+    pump_path - path to pumping excel sheet
+    pump_sheet - sheet of specific pumping scenario
+    califlag - 1 if calibrating subsidence model
+    dobs - observations
+    hidstate_t - initial hidden state time given by user
+    hidstate - initial hidden state given by user
+
+    The data sets have specific names for clays and aquifers
+    Thick_data - thickness of clay and aquifers
+    K_data - vertical hydraulic conductivity of clay and aquifers
+    Sskv - inelastic specific storage term
+    Sske - elastic specific storage term
+
+    Returns
+    y - subsidence (cm/yr) time series
+    """
+
+    v = p.valuesdict()
+
+    # Obs covariance
+    # [nd x nd]
+    # ce = np.diag(obs_var)
+
+    # Initiate an array of predicted results.
+    d_pred = np.zeros([len(dobs)])
+
+    # Preallocation
+    # Head time series for each  node
+    all_results = []
+
+    # Subsidence sum for all clay layers
+    sub_total = []
+
+    # Inelastic subsidence sum for all clay layers
+    subv_total = []
+
+    # Optimal params for running ESMDA
+    # Number of wells
+    num_wells = len(models)
+
+    # Length of parameters
+    n_param = len(params_i)
+
+    # list to dataframe for pumping
+    pumping_data = []
+
+    # Preallocation of new models with new parameters
+    newmodels = []
+
+    # Temporary assignments
+    temp_Sskv = Sskv_data.copy()
+    temp_Sske = Sske_data.copy()
+    temp_K = K_data.copy()
+    # If working with multipliers
+    if p_multop[0]:
+
+        # If only calibrating Sskv and Sske
+        if p_multop[1] == "Sskv":
+
+            temp_Sskv.loc[wellnestlist[0]] = np.array(
+                Sskv_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(p[num_wells*n_param]))
+
+            # Number of clay nodes
+            len_nodes = Nz + 2
+
+            # Gets initial clay heads
+            h_ic = [p[(numt*len_nodes + (
+                num_wells*n_param+1)):(
+                    (numt+1)*len_nodes+(
+                        num_wells*n_param+1))] for numt in range(len(hidstate_t))]
+
+        elif p_multop[1] == "Sske":
+
+            temp_Sske.iloc[0, ::2] = Sskv_data.loc[wellnestlist[0]].iloc[::2] * \
+                np.array(np.exp(p[num_wells*n_param]))
+            temp_Sske.iloc[0, 1::2] = temp_Sske.iloc[0, 0::2] / 10
+
+            # Number of clay nodes
+            len_nodes = Nz + 2
+
+            # Gets initial clay heads
+            h_ic = [p[(numt*len_nodes + 1):((numt+1)*len_nodes+1)]
+                    for numt in range(len(hidstate_t))]
+
+        # If calibrating K
+        elif p_multop[1] == "K":
+
+            temp_K.loc[wellnestlist[0]] = np.array(
+                K_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(p[num_wells*n_param]))
+
+            # Number of clay nodes
+            len_nodes = Nz + 2
+
+            # Gets initial clay heads
+            h_ic = [p[(numt*len_nodes + 1):((numt+1)*len_nodes+1)]
+                    for numt in range(len(hidstate_t))]
+
+        # If calibrating Sskv and Sske and K
+        elif p_multop[1] == "all":
+
+            # BASIN HOPPING
+            temp_Sskv.loc[wellnestlist[0]] = np.array(
+                Sskv_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(p[num_wells*n_param]))
+
+            temp_Sske.iloc[0, ::2] = Sskv_data.loc[wellnestlist[0]].iloc[::2] * \
+                np.array(np.exp(p[num_wells*n_param+1]))
+            temp_Sske.iloc[0, 1::2] = temp_Sske.iloc[0, 0::2] / 10
+
+            temp_K.loc[wellnestlist[0]] = np.array(
+                K_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(p[num_wells*n_param+2]))
+
+            # Number of clay nodes
+            len_nodes = Nz + 2
+            # Gets initial clay heads
+            h_ic = [p[(numt*len_nodes + (
+                num_wells*n_param+3)):((
+                    numt+1)*len_nodes+(
+                        num_wells*n_param+3))] for numt in range(len(hidstate_t))]
+
+        # If calibrating Sskv and Sske
+        elif p_multop[1] == "Ss":
+
+            # BASIN HOPPING
+            temp_Sskv.loc[wellnestlist[0]] = np.array(
+                Sskv_data.loc[wellnestlist[0]]) * np.array(np.exp(p[0]))
+
+            temp_Sske.iloc[0, ::2] = Sskv_data.loc[wellnestlist[0]].iloc[::2] * \
+                np.array(np.exp(p[1]))
+            temp_Sske.iloc[0, 1::2] = temp_Sske.iloc[0, 0::2] / 10
+
+            # Number of clay nodes
+            len_nodes = Nz + 2
+
+            # Gets initial clay heads
+            # h_ic = [p[(numt*len_nodes + 2):((numt+1)*len_nodes+2)]
+            #         for numt in range(len(hidstate_t))]
+
+        # If calibrating Sskv and K
+        elif p_multop[1] == "SsK":
+
+            # BASIN HOPPING
+            temp_Sskv.loc[wellnestlist[0]] = np.array(
+                Sskv_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(v[p_multop[1]+str(0)]))
+
+            temp_Sske.loc[wellnest][::2] = temp_Sskv.loc[wellnest][::2] * .15
+            temp_Sske.loc[wellnest][1::2] = temp_Sske.loc[wellnest][0::2] / 10
+
+            temp_K.loc[wellnestlist[0]] = np.array(
+                K_data.loc[wellnestlist[0]]) * np.array(
+                    np.exp(v[p_multop[1]+str(1)]))
+
+            # Each hidden state value METHOD
+            # Number of clay nodes
+            # len_nodes = Nz + 2
+
+            # # Gets initial clay heads
+            # h_ic = [p[(numt*len_nodes + (
+            #     num_wells*n_param+n_pump+2)):((
+            #         numt+1)*len_nodes+(
+            #             num_wells*n_param+n_pump+2))] for numt in range(len(hidstate_t))]
+
+            # Multiplier of hidden state METHOD
+            # len_clay = len(hidstate)
+            # # Alternative method for clay heads
+            # # Usign multiplier instead of individual values to
+            # # maintain pattern from diffusion model
+            # h_ic = []
+            # [h_ic.append(pd.Series(hidstate[numhid] * p[(numhid + (
+            #     num_wells*n_param+n_pump+2))])) for numhid in range(len_clay)]
+
+    # Initiate an array of predicted results.
+    for model_i, model in enumerate(models):
+
+        # parameter names
+        param_name = model.parameters.index[params_i].values
+
+        for param_i, param in enumerate(param_name):
+
+            model.set_parameter(name=param,
+                                initial=v[param+str(model_i)],
+                                optimal=v[param+str(model_i)])
+
+        if n_param != 4:
+
+            # Other names
+            other_name = model.parameters.index[others_i].values
+
+            for other_i, other in enumerate(other_name):
+                # Sets to optimal param
+                model.set_parameter(name=other,
+                                    initial=other_params[model_i][others_i[other_i]],
+                                    optimal=other_params[model_i][others_i[other_i]])
+                # Sets to true value
+                # Set to the truth
+                # if other == "well_A":
+
+                #     model.set_parameter(name=other,
+                #                         initial=-.1,
+                #                         optimal=-.1)
+                # elif other == "constant_d":
+
+                #     model.set_parameter(name=other,
+                #                         initial=2,
+                #                         optimal=2)
+
+        # Saving new models with new parameters
+        newmodels.append(model)
+
+    well_data_dates, \
+        all_well4_data = load_Pastas_ESMDA(Pastasfiles,
+                                           lenfiles,
+                                           proxyflag,
+                                           newmodels, well_names,
+                                           model_path,
+                                           pumpflag,
+                                           tmin, tmax, SS_data,
+                                           init=0, ne=None,
+                                           initoptiparam=None,
+                                           pump_path=None,
+                                           pump_sheet=None,
+                                           pump_series=None
+                                           )
+
+    # Calculates subsidence without reloading Pastas models
+    sub_total, subv_total, all_results = run_sub(num_clay, all_well4_data,
+                                                 well_data_dates, mode,
+                                                 tmin, tmax, SS_data,
+                                                 wellnest,
+                                                 temp_K, temp_Sskv, temp_Sske,
+                                                 CC, Nz, Thick_data, ic_run,
+                                                 sub_total, subv_total,
+                                                 all_results, user_ic=None)
+    #                                            [hidstate_t, h_ic])
+
+    # Post process data
+    sub_total, subv_total, ann_sub, \
+        avgsub = bkk_postproc(wellnestlist,
+                              sub_total,
+                              subv_total,
+                              all_results)
+
+    # preparation
+    daterange = pd.date_range(dt.datetime(1978, 12, 31), periods=43,
+                              freq="Y").tolist()
+    df = pd.DataFrame(daterange, columns=["date"])
+
+    # annual data in cm
+    plot_data = df.merge(ann_sub[0][1]*100, left_on=df.date,
+                         right_on=ann_sub[0][1].index,
+                         how="left")
+
+    # Renaming for other merge
+    plot_data = plot_data.rename(columns={"key_0": "key0"})
+
+    # Filling na with 0
+    plot_data = plot_data.fillna(0)
+
+    # Benchamrks already in cm
+    plot_data = plot_data.merge(dobs.iloc[0:nd_sub].rename("dobs_sub"),
+                                left_on=plot_data.key0,
+                                right_on=pd.to_datetime(
+                                    dobs.iloc[0:nd_sub].index),
+                                how="left")
+    # Renaming for other merge
+    plot_data = plot_data.rename(columns={"key_0": "key1"})
+
+    # Filling na with 0
+    plot_data = plot_data.fillna(0)
+
+    plot_data = plot_data.dropna()
+    landlevel = plot_data[
+        plot_data.columns[
+            plot_data.columns.str.contains(
+                "dobs_sub")].item()]
+
+    d_pred[0:nd_sub] = plot_data.AnnRates[landlevel != 0]
+
+    # No proxy head
+    well_data_temp = all_well4_data[well_names]
+
+    # Newly simulated head
+    for well_num in range(len(well_names)):
+
+        d_pred_temp = well_data_temp.iloc[:, well_num]
+        d_pred_temp.name = "Simulation"
+
+        # Stripping d_pred to match dobs
+        # Matching obs to predicted
+        df = pd.DataFrame(gw_obs_indices[well_num+1], columns=["date"],
+                          index=gw_obs_indices[well_num+1])
+        len_ = len(gw_obs_indices[well_num+1])  # +1 because first is sub
+        # annual data in cm
+        temp = df.merge(d_pred_temp, left_on=pd.to_datetime(
+            df.index), right_on=d_pred_temp.index, how="left")
+
+        # Renaming for second merge
+        temp = temp.rename(columns={"key_0": "key0"})
+        if well_num == 0:
+
+            index0 = nd_sub
+            nd_temp_1 = nd_sub + len_
+
+        else:
+
+            index0 += len(gw_obs_indices[well_num+1-1])
+            nd_temp_1 += len_
+
+        d_pred[index0:nd_temp_1] = temp.Simulation
+        # Renaming for second merge
+        temp = temp.rename(columns={"Simulation": "Simulation0"})
+
+    # Calculating residuals
+    # All
+    resid_head = d_pred - dobs
+    # pump_var = daily_date_pump.Pump.var(skipna=True)
+    # if pump_var == 0.0:
+
+    #     pump_var = .1*daily_date_pump.Pump
+
+    # # Cost function
+    # # Jx = .5 * resid.T @ np.linalg.pinv(ce) @ resid
+    if lambda_ is None:
+
+        lambda_ = 0
+
+    firstterm = resid_head**2/obs_var
+    Jx = firstterm
+    # Jx = firstterm
+    # GW/ SUb separate
+    # sub_resid = (d_pred[0:nd_sub] - dobs.iloc[0:nd_sub])/(
+    #     obs_var[0:nd_sub] * nd_sub)
+    # gw_resid = (d_pred[nd_sub:] - dobs.iloc[nd_sub:])/(
+    #     obs_var[nd_sub:] * nd_gw)
+    # Jx = pd.concat([sub_resid, gw_resid])
+
+    return Jx
+
+
+def forward_gwparam_SELECT_ls(p, wellnestlist, Pastasfiles, lenfiles,
+                              proxyflag, model_path, pumpflag,
+                              mode, tmin, tmax,
+                              all_well4_data,
+                              well_data_dates,
+                              wellnest,
+                              SS_data, p_multop,
+                              ic_run, return_sub, dobs,
+                              gw_obs_indices, models,
+                              well_names,
+                              nd_gw, obs_var,
+                              initoptiparam=None,
+                              pump_path=None,
+                              pump_sheet=None,
+                              pump_series=None,
+                              hidstate_t=None, hidstate=None,
+                              params_i=None,
+                              other_params=None,
+                              others_i=None,
+                              lambda_=None):
+    """Running pastas and subsidence model for esmda
+    Selected parameters from gw and subsidence + pumping + clay heads
+
+
+    p - list of param multiplers (1 for Sskv, 2 for Sske, 3 for K)
+    wellnestlist - list of wellnest to calculate subsidence for
+    mode - raw groundwater data or time series from pastas (raw needs to
+    to be interpolated). options: raw, pastas
+    tmin, tmax - (str) minimum and maximum year to calculate sub
+    CC - convergence criteria
+    Nz - number of nodes in the z direction
+    ic_run - True or false to generate initial condition run for clays
+    proxyflag - 1 if using available heads as proxy for missing heads
+    pumpflag - 1 if changing pumping scenario for Pastas
+    model_path - path to python models
+    pump_path - path to pumping excel sheet
+    pump_sheet - sheet of specific pumping scenario
+    califlag - 1 if calibrating subsidence model
+    dobs - observations
+    hidstate_t - initial hidden state time given by user
+    hidstate - initial hidden state given by user
+
+    The data sets have specific names for clays and aquifers
+    Thick_data - thickness of clay and aquifers
+    K_data - vertical hydraulic conductivity of clay and aquifers
+    Sskv - inelastic specific storage term
+    Sske - elastic specific storage term
+
+    Returns
+    y - subsidence (cm/yr) time series
+    """
+
+    v = p.valuesdict()
+
+    # Obs covariance
+    # [nd x nd]
+    # ce = np.diag(obs_var)
+
+    # Initiate an array of predicted results.
+    d_pred = np.zeros([len(dobs)])
+
+    # Optimal params for running ESMDA
+    # Number of wells
+    num_wells = len(models)
+
+    # Length of parameters
+    n_param = len(params_i)
+
+    # Preallocation of new models with new parameters
+    newmodels = []
+
+    # Initiate an array of predicted results.
+    for model_i, model in enumerate(models):
+
+        # parameter names
+        param_name = model.parameters.index[params_i].values
+
+        for param_i, param in enumerate(param_name):
+
+            model.set_parameter(name=param,
+                                initial=v[param+str(model_i)],
+                                optimal=v[param+str(model_i)])
+
+        if n_param != 4:
+
+            # Other names
+            other_name = model.parameters.index[others_i].values
+
+            for other_i, other in enumerate(other_name):
+                # Sets to optimal param
+                model.set_parameter(name=other,
+                                    initial=other_params[model_i][others_i[other_i]],
+                                    optimal=other_params[model_i][others_i[other_i]])
+                # Sets to true value
+                # Set to the truth
+                # if other == "well_A":
+
+                #     model.set_parameter(name=other,
+                #                         initial=-.1,
+                #                         optimal=-.1)
+                # elif other == "constant_d":
+
+                #     model.set_parameter(name=other,
+                #                         initial=2,
+                #                         optimal=2)
+
+        # Saving new models with new parameters
+        newmodels.append(model)
+
+    well_data_dates, \
+        all_well4_data = load_Pastas_ESMDA(Pastasfiles,
+                                           lenfiles,
+                                           proxyflag,
+                                           newmodels, well_names,
+                                           model_path,
+                                           pumpflag,
+                                           tmin, tmax, SS_data,
+                                           init=0, ne=None,
+                                           initoptiparam=None,
+                                           pump_path=None,
+                                           pump_sheet=None,
+                                           pump_series=None
+                                           )
+
+    # No proxy head
+    well_data_temp = all_well4_data[well_names]
+
+    # Newly simulated head
+    for well_num in range(len(well_names)):
+
+        d_pred_temp = well_data_temp.iloc[:, well_num]
+        d_pred_temp.name = "Simulation"
+
+        # Stripping d_pred to match dobs
+        # Matching obs to predicted
+        df = pd.DataFrame(gw_obs_indices[well_num], columns=["date"],
+                          index=gw_obs_indices[well_num])
+        len_ = len(gw_obs_indices[well_num])  # +1 because first is sub
+        # annual data in cm
+
+        temp = df.merge(d_pred_temp, left_on=pd.to_datetime(
+            df.index), right_on=d_pred_temp.index, how="left")
+
+        # Renaming for second merge
+        temp = temp.rename(columns={"key_0": "key0"})
+
+        if well_num == 0:
+
+            index0 = 0
+            nd_temp_1 = len(gw_obs_indices[well_num])
+
+        else:
+
+            index0 += len(gw_obs_indices[well_num-1])
+            nd_temp_1 += len_
+
+        d_pred[index0:nd_temp_1] = temp.Simulation
+
+        # Renaming for second merge
+        temp = temp.rename(columns={"Simulation": "Simulation0"})
+
+    # Calculating residuals
+    # All
+    resid_head = d_pred - dobs
+
+    # # Cost function
+    # # Jx = .5 * resid.T @ np.linalg.pinv(ce) @ resid
+    if lambda_ is None:
+
+        lambda_ = 0
+
+    firstterm = resid_head**2/obs_var
+    Jx = firstterm
     # Jx = firstterm
     # GW/ SUb separate
     # sub_resid = (d_pred[0:nd_sub] - dobs.iloc[0:nd_sub])/(
@@ -5523,7 +6101,7 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                                            annual_pump, listdaily_pump, SS_data, obs_var,
                                            None, None,
                                            param_index, pastas_optparam,
-                                           other_i))
+                                           other_i, lambda_))
 
                 # Returns ESMDA solver and pastas models
                 return out, models, well_names
@@ -5967,6 +6545,225 @@ def bkk_subsidence(wellnestlist, mode, tmin, tmax,
                                            annual_pump,
                                            listdaily_pump,
                                            nd_sub, nd_gw, obs_var,
+                                           None, None, None, None,
+                                           None, None,
+                                           param_index,
+                                           pastas_optparam,
+                                           other_i, lambda_))
+
+                # Returns ESMDA solver and pastas models
+                return out, models, well_names
+
+            # If parameter calibration and pumping estimation Least squares
+            elif "ls_gwparam_subSELECT" == esmdaflag:
+
+                # Mprior
+                mprior_init = pd.DataFrame()
+
+                # Parameter indexing
+                param_index = esmdaindex
+
+                params = lmfit.Parameters()
+
+                # Initial samples of Pastas parameters
+                # should be [nd x ne]
+                for param_i in param_ens:
+
+                    for i, pasta_param in enumerate(param_i.columns[param_index]):
+
+                        # Adding parameters for each model
+                        for n_models in range(len(models)):
+                            params.add(
+                                name=pasta_param+str(n_models),
+                                value=param_i[pasta_param].values[0],
+                                min=min_pastas[0, param_index[i]],
+                                max=max_pastas[0, param_index[i]])
+
+                # Other index
+                range_ = set(range(0, len(pastas_optparam[0])))
+                other_i = np.array(list(
+                    set(param_index).symmetric_difference(range_)))
+
+                # PARAMETER BOUNDARIES!
+                # parambound_path = os.path.join(os.path.abspath("inputs"),
+                #                                "SUBParametersCali.xlsx")
+                parambound_path = os.path.join(os.path.abspath("inputs"),
+                                               "SUBParametersPriortoManual.xlsx")
+
+                parambound = pd.read_excel(parambound_path,
+                                           sheet_name="bounds_mult",
+                                           index_col=0)
+                parambound = pd.DataFrame(parambound)
+                parambound.iloc[:, 0:2] = np.log(parambound.iloc[:, 0:2])
+
+                m_bounds = list(zip(parambound.loc[
+                    parambound.Wellnest == wellnestlist[0]].iloc[0:3, 0],
+                    parambound.loc[
+                    parambound.Wellnest == wellnestlist[0]].iloc[0:3, 1]))
+
+                # Only subsidence parameters
+                if p_multop[1] == "all":
+                    nm = 3
+                    p_mult = []
+                    [p_mult.append(random.uniform(m_bounds[x][0], m_bounds[x][1]))
+                     for x in range(nm)]
+                    par_error_sub = par_error[0]
+                # Only subsidence parameters
+                elif p_multop[1] == "Ss":
+                    nm = 2
+                    p_mult = []
+                    [p_mult.append(random.uniform(m_bounds[x][0], m_bounds[x][1]))
+                     for x in range(nm)]
+
+                    par_error_sub = par_error[:2]
+
+                elif p_multop[1] == "Sskv":
+
+                    p_mult = [random.uniform(
+                        m_bounds[0][0], m_bounds[0][1])]
+
+                    par_error_sub = par_error[0]/10
+
+                elif p_multop[1] == "Sske":
+
+                    p_mult = [random.uniform(
+                        m_bounds[1][0], m_bounds[1][1])]
+
+                    par_error_sub = par_error[1]
+
+                elif p_multop[1] == "K":
+
+                    p_mult = [random.uniform(
+                        m_bounds[2][0], m_bounds[2][1])]
+
+                    par_error_sub = par_error[2]
+
+                # Only Sskv and K
+                elif p_multop[1] == "SsK":
+                    nm = 2
+                    p_mult = []
+                    [p_mult.append(random.uniform(m_bounds[x][0], m_bounds[x][1]))
+                     for x in np.arange(0, nm+1, nm)]
+
+                    par_error_sub = par_error[0:nm+1:nm]
+
+                # Number of model parameters
+                nm = len(p_mult)
+
+                # Prior: Let's start average of the bounds
+                mprior_mean = p_mult
+
+                mprior_mean = np.array(mprior_mean)
+
+                # Parameter error
+                par_std = par_error_sub
+
+                # Prior distribution of parameters
+                param_init = rng.normal(loc=mprior_mean, scale=par_std,
+                                        size=(ne, nm)).T
+
+                # For each sub
+                for sub_param_i in range(nm):
+                    params.add(
+                        name=p_multop[1]+str(sub_param_i),
+                        value=param_init[sub_param_i, 0],
+                        min=parambound.loc[
+                            parambound.Wellnest == wellnestlist[0]].iloc[sub_param_i, 0],
+                        max=parambound.loc[
+                            parambound.Wellnest == wellnestlist[0]].iloc[sub_param_i, 1])
+
+                # Number of observations
+                nd = dobs.size
+                nd_sub = len(gw_obs_indices[0])
+                nd_gw = nd - nd_sub
+                # Associated standard deviation: ones (for this scenario)
+                obs_error_sub = 1.5
+                obs_error_gw = obs_error
+                obs_std = np.append(np.ones(nd_sub) * obs_error_sub,
+                                    np.ones(nd_gw) * obs_error_gw)
+                obs_var = obs_std**2
+
+                # Running ESMDA
+                out = lmfit.minimize(forward_gwparam_subSELECT_ls, params,
+                                     method='least_squares',
+                                     args=(wellnestlist, Pastasfiles,
+                                           lenfiles, proxyflag,
+                                           model_path, pumpflag,
+                                           mode, tmin, tmax,
+                                           Thick_data, K_data, Sskv_data,
+                                           Sske_data, CC,
+                                           Nz, num_clay, all_well4_data,
+                                           well_data_dates,
+                                           wellnest,
+                                           SS_data, p_multop,
+                                           ic_run, return_sub, dobs,
+                                           gw_obs_indices, models,
+                                           well_names, np.nan,
+                                           annual_pump,
+                                           listdaily_pump,
+                                           nd_sub, nd_gw, obs_var,
+                                           None, None, None, None,
+                                           None, None,
+                                           param_index,
+                                           pastas_optparam,
+                                           other_i, lambda_))
+
+                # Returns ESMDA solver and pastas models
+                return out, models, well_names
+
+            # If parameter calibration and pumping estimation Least squares
+            elif "ls_gwparam_SELECT" == esmdaflag:
+
+                # Mprior
+                mprior_init = pd.DataFrame()
+
+                # Parameter indexing
+                param_index = esmdaindex
+
+                params = lmfit.Parameters()
+
+                # Initial samples of Pastas parameters
+                # should be [nd x ne]
+                for param_i in param_ens:
+
+                    for i, pasta_param in enumerate(param_i.columns[param_index]):
+
+                        # Adding parameters for each model
+                        for n_models in range(len(models)):
+                            params.add(
+                                name=pasta_param+str(n_models),
+                                value=param_i[pasta_param].values[0],
+                                min=min_pastas[0, param_index[i]],
+                                max=max_pastas[0, param_index[i]])
+
+                # Other index
+                range_ = set(range(0, len(pastas_optparam[0])))
+                other_i = np.array(list(
+                    set(param_index).symmetric_difference(range_)))
+
+                # Number of observations
+                nd = dobs.size
+                nd_gw = nd
+                # Associated standard deviation: ones (for this scenario)
+                obs_error_sub = 1.5
+                obs_error_gw = obs_error
+                obs_std = np.ones(nd_gw) * obs_error_gw
+                obs_var = obs_std**2
+
+                # Running ESMDA
+                out = lmfit.minimize(forward_gwparam_SELECT_ls, params,
+                                     method='least_squares',
+                                     args=(wellnestlist, Pastasfiles,
+                                           lenfiles, proxyflag,
+                                           model_path, pumpflag,
+                                           mode, tmin, tmax,
+                                           all_well4_data,
+                                           well_data_dates,
+                                           wellnest,
+                                           SS_data, p_multop,
+                                           ic_run, return_sub, dobs,
+                                           gw_obs_indices, models,
+                                           well_names, nd_gw, obs_var,
                                            None, None, None, None,
                                            None, None,
                                            param_index,

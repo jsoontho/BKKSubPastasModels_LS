@@ -175,7 +175,7 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//ESMDA//all//cycpumpingcaseANAD_na8ne250//")
+    modelpath = os.path.abspath("models//cyclical//")
 
 # Pumping response function
 pump_rfunc = ps.Gamma()
@@ -214,7 +214,7 @@ def gamma_block(A, n, a, cutoff=0.999):
 
 # True parameters for Pastas and subsidence mult (a, b, c)
 Atrue = -.1
-ntrue = 2.5
+ntrue = 1.2
 atrue = 50
 dtrue = 2
 
@@ -357,13 +357,13 @@ for wells in well_names:
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//ESMDA//all//pumpingcaseANAD_na8ne250//perfect")
+    modelpath = os.path.abspath("models//bangkok-based//perfect")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
     modelpath = os.path.abspath(
-        "models//ESMDA//all//cycpumpingcaseANAD_na8ne250//perfect")
+        "models//cyclical//perfect")
 
 # For all wells in well nest
 for wells in well_names:
@@ -440,12 +440,12 @@ if mode == "Pastas":
 
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//ESMDA//all//pumpingcaseANAD_na8ne250//")
+        mpath = os.path.abspath("models//bangkok-based//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//ESMDA//all//cycpumpingcaseANAD_na8ne250//")
+        mpath = os.path.abspath("models//cyclical//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -592,8 +592,8 @@ for num_well, wellnest in enumerate(wellnestlist):
             if any(matchdate):
 
                 obssyndata[wellnest][idx] = plot_data.AnnRates[
-                    matchdate] + random.uniform(0, sub_error *
-                                                np.mean(plot_data.AnnRates))
+                    matchdate] + np.random.normal(0, abs(sub_error *
+                                                  np.mean(plot_data.AnnRates)))
 
     syndata["Year"] = syndata.index.year
     syndata = syndata.rename(columns={wellnest: 'Land_' + wellnest})
@@ -649,12 +649,12 @@ gw_obs_df = pd.concat(gw_obs_list)
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//ESMDA//all//pumpingcaseANAD_na8ne250//")
+    savepath = os.path.abspath("models//bangkok-based//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//ESMDA//all//cycpumpingcaseANAD_na8ne250//")
+    savepath = os.path.abspath("models//cyclical//")
 
 # GW obs
 fig_name1 = wellnestlist[0] + "_GWObs.csv"
