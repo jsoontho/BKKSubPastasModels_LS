@@ -1,0 +1,93 @@
+[[Fit Statistics]]
+    # fitting method   = least_squares
+    # function evals   = 5326
+    # data points      = 16442
+    # variables        = 76
+    chi-square         = 1368206.11
+    reduced chi-square = 83.6005200
+    Akaike info crit   = 72848.9336
+    Bayesian info crit = 73434.7108
+##  Warning: uncertainties could not be estimated:
+    pump2:        at initial value
+    pump2:        at boundary
+    pump60:       at initial value
+    pump60:       at boundary
+    pump62:       at initial value
+    pump62:       at boundary
+[[Variables]]
+    well_A0:     -0.04028284 (init = -0.01484311)
+    well_n0:      1.21380238 (init = 1.322998)
+    well_a0:      10.4635983 (init = 10.69757)
+    constant_d0:  2.43318899 (init = 3.149597)
+    pump0:       -0.69322803 (init = 0)
+    pump1:        4.33789258 (init = 6.214608)
+    pump2:        6.21460810 (init = 6.214608)
+    pump3:        5.10019244 (init = 6.214608)
+    pump4:        5.20694616 (init = 6.214608)
+    pump5:        5.20807448 (init = 6.214608)
+    pump6:        3.11801210 (init = 3.982971)
+    pump7:        4.86073321 (init = 6.214608)
+    pump8:        5.12488428 (init = 6.214608)
+    pump9:        5.16383769 (init = 6.214608)
+    pump10:       5.24076188 (init = 6.214608)
+    pump11:       5.22961811 (init = 6.214608)
+    pump12:       5.23721200 (init = 6.214608)
+    pump13:       5.26083111 (init = 6.214608)
+    pump14:       5.28861193 (init = 6.214608)
+    pump15:       5.31347529 (init = 6.214608)
+    pump16:       5.32769227 (init = 6.214608)
+    pump17:       5.32583268 (init = 6.214608)
+    pump18:       5.37343382 (init = 6.214608)
+    pump19:       0.46933448 (init = 1.129538)
+    pump20:       4.94871924 (init = 6.214608)
+    pump21:       5.27676199 (init = 6.214608)
+    pump22:       4.80130851 (init = 6.214608)
+    pump23:       5.36437731 (init = 6.214608)
+    pump24:       5.20269713 (init = 6.214608)
+    pump25:       0.46181835 (init = 0.8797188)
+    pump26:       4.43508327 (init = 6.214608)
+    pump27:       5.69906634 (init = 6.214608)
+    pump28:       6.19101236 (init = 6.214608)
+    pump29:       6.13443926 (init = 6.214608)
+    pump30:       5.51927898 (init = 6.214608)
+    pump31:       3.75957621 (init = 6.214608)
+    pump32:       3.66373605 (init = 6.214608)
+    pump33:       5.40769186 (init = 6.214608)
+    pump34:       6.10398070 (init = 6.214608)
+    pump35:       6.18232914 (init = 6.214608)
+    pump36:       5.81444810 (init = 6.214608)
+    pump37:       4.01500856 (init = 6.214608)
+    pump38:       4.46048657 (init = 4.492636)
+    pump39:       5.01919054 (init = 6.214608)
+    pump40:       6.00760865 (init = 6.214608)
+    pump41:       6.11166130 (init = 6.214608)
+    pump42:       6.09616406 (init = 6.214608)
+    pump43:       4.90162906 (init = 6.214608)
+    pump44:       0.21637022 (init = 0.01566914)
+    pump45:       4.67340811 (init = 6.214608)
+    pump46:       5.81661511 (init = 6.214608)
+    pump47:       6.20518716 (init = 6.214608)
+    pump48:       6.09795387 (init = 6.214608)
+    pump49:       5.37610788 (init = 6.214608)
+    pump50:       3.46276087 (init = 3.503397)
+    pump51:       4.42658628 (init = 6.214608)
+    pump52:       5.88799219 (init = 6.214608)
+    pump53:       5.25211464 (init = 6.214608)
+    pump54:       6.18803915 (init = 6.214608)
+    pump55:       5.25980004 (init = 6.214608)
+    pump56:       6.21267969 (init = 6.214608)
+    pump57:       5.26212515 (init = 6.214608)
+    pump58:       6.21447016 (init = 6.214608)
+    pump59:       5.32227009 (init = 6.214608)
+    pump60:       6.21459920 (init = 6.214608)
+    pump61:       5.01436387 (init = 6.214608)
+    pump62:       6.21460743 (init = 6.214608)
+    pump63:       1.52504915 (init = 1.410342)
+    pump64:      -22.8796486 (init = 6.214608)
+    pump65:       6.11643600 (init = 6.214608)
+    pump66:       5.29824649 (init = 6.214608)
+    pump67:       5.68406098 (init = 6.214608)
+    pump68:       5.92827510 (init = 6.214608)
+    pump69:       0.81274676 (init = 0.660962)
+    SsK0:         2.42282339 (init = 2.649418)
+    SsK1:        -1.84045607 (init = -1.353233)
