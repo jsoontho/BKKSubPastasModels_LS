@@ -6,6 +6,18 @@ lambda=.15
 Execution time: 20.90005854003959 hours
 CPU Execution time: 20.8340625 hours
 
+lambda=.25
+Execution time: 19.162321133149995 hours
+CPU Execution time: 19.212491319444446 hours
+
+lambda = .35
+Execution time: 18.72760497258769 hours
+CPU Execution time: 18.775733506944444 hours
+
+lambda = .4
+Execution time: 40.724951279362045 hours
+CPU Execution time: 40.853962673611115 hours
+
 lambda=60
 Execution time: 8.979226374295022 hours
 CPU Execution time: 8.960399305555555 hours
