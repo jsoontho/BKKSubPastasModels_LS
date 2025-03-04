@@ -54,7 +54,8 @@ a = 3.68
 b = .15
 c = 4.8
 
-pumpexperiment = "simpleexp"
+pumpexperiment = "cyclical"
+barerror = False
 
 # Annual pumping data (mean), std
 pumppath = os.path.join(os.path.abspath("inputs"),
@@ -345,11 +346,15 @@ fh.close()
 
 # Saving variables and values
 ls_sub_m = {}
+ls_error = []
 
 # Saving values from string
 for temp_i in range(len(temp)):
     variable_name = temp[temp_i].split(":")[0].strip()
 
+    if barerror:
+        if temp_i < 4 or temp_i >= (len(temp)-2):
+            ls_error.append(float(temp[temp_i][33:43]))
     # Constant d lines are too long
     if "constant_d" in variable_name:
         ls_sub_m[variable_name] = float(temp[temp_i][16:28])
@@ -677,18 +682,45 @@ initsubtry = ann_sub.copy()
 
 # %% 30 regularized least squares
 
-# save fit report to a file:
-with open(os.path.abspath(
-        lspath + "//" +
-        wellnestlist[0] + "_LSreg30.0_modelresult.txt"),
-        'r') as fh:
-    temp = fh.readlines()
-    temp = [x.replace("\n", "") for x in temp]
-    temp = temp[
-        temp.index("[[Variables]]") + 1:temp.index(
-            "[[Correlations]] (unreported correlations are < 0.100)")]
-    # temp = temp[
-    #     temp.index("[[Variables]]") + 1:]
+if pumpexperiment == "simpleexp":
+    # save fit report to a file:
+    with open(os.path.abspath(
+            lspath + "//" +
+            wellnestlist[0] + "_LSreg30.0_modelresult.txt"),
+            'r') as fh:
+        temp = fh.readlines()
+        temp = [x.replace("\n", "") for x in temp]
+        temp = temp[
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
+elif pumpexperiment == "pumpingcase1":
+    # save fit report to a file:
+    with open(os.path.abspath(
+            lspath + "//" +
+            wellnestlist[0] + "_LSreg35.0_modelresult.txt"),
+            'r') as fh:
+        temp = fh.readlines()
+        temp = [x.replace("\n", "") for x in temp]
+        temp = temp[
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
+elif pumpexperiment == "cyclical":
+    # save fit report to a file:
+    with open(os.path.abspath(
+            lspath + "//" +
+            wellnestlist[0] + "_LSreg40.0_modelresult.txt"),
+            'r') as fh:
+        temp = fh.readlines()
+        temp = [x.replace("\n", "") for x in temp]
+        temp = temp[
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
 fh.close()
 
 # Saving variables and values
@@ -697,7 +729,9 @@ ls_sub30 = {}
 # Saving values from string
 for temp_i in range(len(temp)):
     variable_name = temp[temp_i].split(":")[0].strip()
-
+    if barerror:
+        if temp_i < 4 or temp_i >= (len(temp)-2):
+            ls_error.append(float(temp[temp_i][33:43]))
     # Constant d lines are too long
     if "constant_d" in variable_name:
         ls_sub30[variable_name] = float(temp[temp_i][16:28])
@@ -1058,7 +1092,7 @@ handles, labels = axs[row].get_legend_handles_labels()
 
 # Adding lines for ensemble members
 line = Line2D([0], [0], label='Initial', color='tab:red',
-              alpha=1, linewidth=4)
+              alpha=.3, linewidth=4)
 linels = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
                 linestyle="--",
                 alpha=1, linewidth=4)
@@ -1149,6 +1183,12 @@ if n_param == 4:
                       ls_sub30["well_A"+str(mod_i)],
                       Atrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+            if barerror:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan,
+                                             ls_error[param_i], ls_error[param_i+6],
+                                             np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(a)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1171,6 +1211,12 @@ if n_param == 4:
                       ls_sub30["well_n"+str(mod_i)],
                       ntrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+            if barerror:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan,
+                                             ls_error[param_i], ls_error[param_i+6],
+                                             np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(b)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1193,6 +1239,12 @@ if n_param == 4:
                       ls_sub30["well_a"+str(mod_i)],
                       atrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+            if barerror:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan,
+                                             ls_error[param_i], ls_error[param_i+6],
+                                             np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(d)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1216,6 +1268,12 @@ if n_param == 4:
                       ls_sub30["constant_d"+str(mod_i)],
                       dtrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+            if barerror:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan,
+                                             ls_error[param_i], ls_error[param_i+6],
+                                             np.nan],
+                                       fmt="o", color="k")
             axs[row, col].axhline(0, color="k", linewidth=1)
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(e)",
@@ -1242,23 +1300,29 @@ for param_i in range(n_sub):
             # plt.title('Sskv', fontsize=14)
             truthval = a
             axs[param_i, 2].set_title(
-                'S$_{skv}$ Multiplier', fontsize=23, weight="bold")
-            values = [np.exp(ls_init["SsK0"]),
-                      np.exp(ls_sub_m["SsK0"]),
-                      np.exp(ls_sub30["SsK0"]),
+                'Log S$_{skv}$ Multiplier', fontsize=23, weight="bold")
+            values = [ls_init["SsK0"],
+                      ls_sub_m["SsK0"],
+                      ls_sub30["SsK0"],
                       truthval]
             axs[param_i, 2].axhline(0, color="k", linewidth=1)
             axs[param_i, 2].set(ylabel="Value")
             axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
+            if barerror:
+                axs[param_i, 2].errorbar(labels, values,
+                                         yerr=[np.nan,
+                                               ls_error[param_i+4], ls_error[param_i+10],
+                                               np.nan],
+                                         fmt="o", color="k")
             axs[param_i, 2].annotate("(c)",
                                      xy=(.1, 1.01), xycoords="axes fraction",
                                      fontsize=20, horizontalalignment="right",
                                      weight="bold",
                                      verticalalignment="bottom")
-            axs[param_i, 2].annotate(f'{np.exp(ls_init["SsK0"]):.2f}',
-                                     (0.07, 0.05), xycoords='axes fraction',
-                                     fontsize=22)
-            mean_ = np.exp(ls_sub30["SsK0"])
+            # axs[param_i, 2].annotate(f'{ls_init["SsK0"]:.2f}',
+            #                          (0.07, 0.05), xycoords='axes fraction',
+            #                          fontsize=22)
+            mean_ = ls_sub30["SsK0"]
             percerr = abs(abs(mean_ - truthval)/truthval) * 100
             print(mean_, truthval)
             print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
@@ -1269,23 +1333,29 @@ for param_i in range(n_sub):
 
             # plt.title('K', fontsize=14)
             truthval = c
-            axs[param_i, 2].set_title('K Multiplier', fontsize=23, weight="bold")
-
-            values = [np.exp(ls_init["SsK1"]),
-                      np.exp(ls_sub_m["SsK1"]),
-                      np.exp(ls_sub30["SsK1"]),
+            axs[param_i, 2].set_title('Log K Multiplier', fontsize=23, weight="bold")
+            axs[param_i, 2].axhline(0, color="k", linewidth=1)
+            values = [ls_init["SsK1"],
+                      ls_sub_m["SsK1"],
+                      ls_sub30["SsK1"],
                       truthval]
             axs[param_i, 2].set(ylabel="Value")
             bars = axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[param_i, 2].annotate(f'{np.exp(ls_sub30["SsK1"]):.2f}',
-                                     (0.54, 0.05), xycoords='axes fraction',
-                                     fontsize=22)
+            if barerror:
+                axs[param_i, 2].errorbar(labels, values,
+                                         yerr=[np.nan,
+                                               ls_error[param_i+4], ls_error[param_i+10],
+                                               np.nan],
+                                         fmt="o", color="k")
+            # axs[param_i, 2].annotate(f'{ls_sub30["SsK1"]:.2f}',
+            #                          (0.54, 0.05), xycoords='axes fraction',
+            #                          fontsize=22)
             axs[param_i, 2].annotate("(f)",
                                      xy=(.1, 1.01), xycoords="axes fraction",
                                      fontsize=20, horizontalalignment="right",
                                      weight="bold",
                                      verticalalignment="bottom")
-            mean_ = np.exp(ls_sub30["SsK1"])
+            mean_ = ls_sub30["SsK1"]
             percerr = abs(abs(mean_ - truthval)/truthval) * 100
             print(mean_, truthval)
             print("Param " + str(param_i) + ": " + f'{percerr:.2f}')

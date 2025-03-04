@@ -257,7 +257,7 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne)
 
-lambda_ = 0.31
+lambda_ = 0.05
 # Number of ensembles
 n = 1
 for n_ens in range(n):

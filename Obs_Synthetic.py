@@ -165,12 +165,12 @@ def generate_cycpumping(ann_pump):
 save_model = 1
 
 # Pumping experiment
-pumpexperiment = "cyclical"
+pumpexperiment = "pumpingcase1"
 
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -357,7 +357,7 @@ for wells in well_names:
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//perfect")
+    modelpath = os.path.abspath("models//bangkok-based_newobs//perfect")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -440,7 +440,7 @@ if mode == "Pastas":
 
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//bangkok-based//")
+        mpath = os.path.abspath("models//bangkok-based_newobs//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
@@ -499,7 +499,7 @@ syndata = pd.DataFrame()
 obssyndata = pd.DataFrame()
 
 # Subsidence error
-sub_error = 1
+sub_error = .75
 
 # Preallocation for truth
 truth = []
@@ -592,8 +592,8 @@ for num_well, wellnest in enumerate(wellnestlist):
             if any(matchdate):
 
                 obssyndata[wellnest][idx] = plot_data.AnnRates[
-                    matchdate] + np.random.normal(0, abs(sub_error *
-                                                  np.mean(plot_data.AnnRates)))
+                    matchdate] + np.random.normal(0, abs(sub_error)) * \
+                    np.std(plot_data.AnnRates) * .5
 
     syndata["Year"] = syndata.index.year
     syndata = syndata.rename(columns={wellnest: 'Land_' + wellnest})
@@ -649,7 +649,7 @@ gw_obs_df = pd.concat(gw_obs_list)
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//bangkok-based//")
+    savepath = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
