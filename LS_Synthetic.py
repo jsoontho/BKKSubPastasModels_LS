@@ -114,12 +114,12 @@ pumpexperiment = "pumpingcase1"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//bangkok-based//")
+    path = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//cyclical//")
+    path = os.path.abspath("models//cyclical_newobs//")
 
 
 # Reading
@@ -245,12 +245,12 @@ if mode == "Pastas":
 
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//bangkok-based//")
+        mpath = os.path.abspath("models//bangkok-based_newobs//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cyclical//")
+        mpath = os.path.abspath("models//cyclical_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -307,7 +307,7 @@ if pumpexperiment == "pumpingcase1":
 elif pumpexperiment == "cyclical":
     comppump = generate_pumping_ens(annual_pump, ne, option)
 
-lambda_ = .3
+lambda_ = 0.5
 # Number of ensembles
 n = 1
 for n_ens in range(n):

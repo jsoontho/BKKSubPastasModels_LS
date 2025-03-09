@@ -4403,10 +4403,21 @@ def forward_gwparam_subSELECT_pump_ls(p, wellnestlist, Pastasfiles, lenfiles,
     if lambda_ is None:
 
         lambda_ = 0
+    
+    # nd = dobs.size
+    # nd_sub = len(gw_obs_indices[0])
+    # nd_gw = nd - nd_sub
+    # # Associated standard deviation: ones (for this scenario)
+    # obs_var_sub = np.var(dobs.iloc[0:nd_sub])
+    # obs_var_gw = np.var(dobs.iloc[nd_sub:-1])
+    # obs_std = np.append(np.ones(nd_sub) * obs_var_sub,
+    #                     np.ones(nd_gw) * obs_var_gw)
+    # obs_var = obs_std**2
 
     firstterm = resid_head**2/obs_var
     secondterm = lambda_*(resid_pump**2/pump_var)
     Jx = firstterm + secondterm[firstterm.index]
+
     # Jx = firstterm
     # GW/ SUb separate
     # sub_resid = (d_pred[0:nd_sub] - dobs.iloc[0:nd_sub])/(

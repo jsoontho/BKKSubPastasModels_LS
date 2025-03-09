@@ -165,7 +165,7 @@ def generate_cycpumping(ann_pump):
 save_model = 1
 
 # Pumping experiment
-pumpexperiment = "pumpingcase1"
+pumpexperiment = "cyclical"
 
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "pumpingcase1":
@@ -175,7 +175,7 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Pumping response function
 pump_rfunc = ps.Gamma()
@@ -363,7 +363,7 @@ if pumpexperiment == "pumpingcase1":
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
     modelpath = os.path.abspath(
-        "models//cyclical//perfect")
+        "models//cyclical_newobs//perfect")
 
 # For all wells in well nest
 for wells in well_names:
@@ -445,7 +445,7 @@ if mode == "Pastas":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cyclical//")
+        mpath = os.path.abspath("models//cyclical_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -654,7 +654,7 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//cyclical//")
+    savepath = os.path.abspath("models//cyclical_newobs//")
 
 # GW obs
 fig_name1 = wellnestlist[0] + "_GWObs.csv"
