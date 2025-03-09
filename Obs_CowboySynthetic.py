@@ -119,7 +119,7 @@ pumpexperiment = "simpleexp"
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping response function
 pump_rfunc = ps.Gamma()
@@ -290,7 +290,7 @@ for wells in well_names:
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//perfect")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//perfect")
 
 # For all wells in well nest
 for wells in well_names:
@@ -369,7 +369,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cowboyhat//")
+        mpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 0
@@ -394,6 +394,8 @@ pumptrue_interp = pd.concat(
 pumpinit = generate_simppumping_ens(annual_pump, 1)
 pumpinit = pd.concat(
     [pumpinit.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+pumpinit[:] = pumpinit[:].astype(float)
+pumpinit.columns = well_names
 pumptrue_interp.columns = well_names
 
 pumptrue_interp[:] = pumptrue_interp[:].astype(float)
@@ -439,7 +441,7 @@ syndata = pd.DataFrame()
 obssyndata = pd.DataFrame()
 
 # Subsidence error
-sub_error = 1
+sub_error = .75
 
 # Preallocation for truth
 truth = []
@@ -590,7 +592,7 @@ gw_obs_df = pd.concat(gw_obs_list)
 # Simple
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//cowboyhat//")
+    savepath = os.path.abspath("models//cowboyhat_newobs//")
 
 # GW obs
 fig_name1 = wellnestlist[0] + "_GWObs_Full.csv"
