@@ -55,7 +55,7 @@ b = .15
 c = 4.8
 
 pumpexperiment = "pumpingcase1"
-barerror = False
+barerror = True
 
 # Annual pumping data (mean), std
 pumppath = os.path.join(os.path.abspath("inputs"),
