@@ -77,8 +77,8 @@
         "obj_func": 1.2494865556749414e-25
     },
     "file_info": {
-        "date_created": "2025-03-09T21:49:41.916069",
-        "date_modified": "2025-03-09T21:49:42.348170",
+        "date_created": "2025-03-09T22:16:19.231827",
+        "date_modified": "2025-03-09T22:16:19.632772",
         "pastas_version": "1.5.0",
         "owner": "jenny"
     }

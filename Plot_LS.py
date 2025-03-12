@@ -54,7 +54,7 @@ a = 3.68
 b = .15
 c = 4.8
 
-pumpexperiment = "cyclical"
+pumpexperiment = "pumpingcase1"
 barerror = False
 
 # Annual pumping data (mean), std
@@ -104,7 +104,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//bangkok-based//")
+        modelpath = os.path.abspath("models//bangkok-based_newobs//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
@@ -129,7 +129,7 @@ if pumpexperiment == "simpleexp":
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//bangkok-based//")
+        "figures//bangkok-based_newobs//")
 
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
@@ -328,7 +328,7 @@ elif pumpexperiment == "cyclical":
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//bangkok-based//")
+    lspath = os.path.abspath("models//bangkok-based_newobs//")
 
 # save fit report to a file:
 with open(os.path.abspath(
@@ -448,7 +448,7 @@ mode = "Pastas"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -614,7 +614,7 @@ mode = "Pastas"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -699,7 +699,7 @@ elif pumpexperiment == "pumpingcase1":
     # save fit report to a file:
     with open(os.path.abspath(
             lspath + "//" +
-            wellnestlist[0] + "_LSreg35.0_modelresult.txt"),
+            wellnestlist[0] + "_LSreg50.0_modelresult.txt"),
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
@@ -825,7 +825,7 @@ mode = "Pastas"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok-based_newobs//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
