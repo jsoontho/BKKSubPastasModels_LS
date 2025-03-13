@@ -95,13 +95,13 @@ if mode == "Pastas":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # pumping case 1: true 1980-1990 arbitrarily lower
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
         modelpath = os.path.abspath(
-            "models//cowboyhat//")
+            "models//cowboyhat_newobs//")
 
 # Path to save models
 tot_path = os.path.abspath("inputs")
@@ -110,7 +110,7 @@ tot_path = os.path.abspath("inputs")
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//cowboyhat//")
+        "figures//cowboyhat_newobs//")
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
@@ -120,7 +120,7 @@ elif pumpexperiment == "pumpingcase1":
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//cyclical//")
+        "figures//cyclical_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -306,11 +306,11 @@ for num_well, wells in enumerate(data.columns[-(len(data.columns)-2):]):
 
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//cowboyhat//")
+    lspath = os.path.abspath("models//cowboyhat_newobs//")
 
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//cyclical//")
+    lspath = os.path.abspath("models//cyclical_newobs//")
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
@@ -439,12 +439,12 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -608,12 +608,12 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -669,8 +669,9 @@ sub_total, subv_total, ann_sub, \
 
 initsubtry = ann_sub.copy()
 
+# %%
 if pumpexperiment == "simpleexp":
-    # %% 10 regularized least squares
+    # 10 regularized least squares
 
     # save fit report to a file:
     with open(os.path.abspath(
@@ -679,11 +680,11 @@ if pumpexperiment == "simpleexp":
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
-        # temp = temp[
-        #     temp.index("[[Variables]]") + 1:temp.index(
-        #         "[[Correlations]] (unreported correlations are < 0.100)")]
         temp = temp[
-            temp.index("[[Variables]]") + 1:]
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
     fh.close()
 
     # Saving variables and values
@@ -791,12 +792,12 @@ if pumpexperiment == "simpleexp":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -977,12 +978,12 @@ if pumpexperiment == "simpleexp":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -1042,191 +1043,191 @@ if pumpexperiment == "simpleexp":
     lsreg_gw.append(model_plotls20)
     lsreg_pump.append(pd.Series(np.exp(pump_mean20)))
 
-    # %% 25 regularized least squares
+    # # %% 25 regularized least squares
 
-    # save fit report to a file:
-    with open(os.path.abspath(
-            lspath + "//" +
-            wellnestlist[0] + "_LSreg25.0_modelresult.txt"),
-            'r') as fh:
-        temp = fh.readlines()
-        temp = [x.replace("\n", "") for x in temp]
-        temp = temp[
-            temp.index("[[Variables]]") + 1:temp.index(
-                "[[Correlations]] (unreported correlations are < 0.100)")]
-        # temp = temp[
-        #     temp.index("[[Variables]]") + 1:]
-    fh.close()
+    # # save fit report to a file:
+    # with open(os.path.abspath(
+    #         lspath + "//" +
+    #         wellnestlist[0] + "_LSreg25.0_modelresult.txt"),
+    #         'r') as fh:
+    #     temp = fh.readlines()
+    #     temp = [x.replace("\n", "") for x in temp]
+    #     temp = temp[
+    #         temp.index("[[Variables]]") + 1:temp.index(
+    #             "[[Correlations]] (unreported correlations are < 0.100)")]
+    #     # temp = temp[
+    #     #     temp.index("[[Variables]]") + 1:]
+    # fh.close()
 
-    # Saving variables and values
-    ls_sub25 = {}
+    # # Saving variables and values
+    # ls_sub25 = {}
 
-    # Saving values from string
-    for temp_i in range(len(temp)):
-        variable_name = temp[temp_i].split(":")[0].strip()
+    # # Saving values from string
+    # for temp_i in range(len(temp)):
+    #     variable_name = temp[temp_i].split(":")[0].strip()
 
-        # Constant d lines are too long
-        if "constant_d" in variable_name:
-            ls_sub25[variable_name] = float(temp[temp_i][16:28])
-        else:
-            ls_sub25[variable_name] = float(temp[temp_i][14:25])
+    #     # Constant d lines are too long
+    #     if "constant_d" in variable_name:
+    #         ls_sub25[variable_name] = float(temp[temp_i][16:28])
+    #     else:
+    #         ls_sub25[variable_name] = float(temp[temp_i][14:25])
 
-    # Saving model plots for least squares
-    model_plotls25 = []
+    # # Saving model plots for least squares
+    # model_plotls25 = []
 
-    # For all wells in well nest
-    for well_i, wells in enumerate(well_names):
+    # # For all wells in well nest
+    # for well_i, wells in enumerate(well_names):
 
-        # Name of well as a string
-        well_name = wells
-        #######################################################################
+    #     # Name of well as a string
+    #     well_name = wells
+    #     #######################################################################
 
-        # Saving pumping
-        pump_mean25 = []
-        for pump_i in range(n_pump):
-            pump_mean25.append(ls_sub25["pump"+str(pump_i)])
+    #     # Saving pumping
+    #     pump_mean25 = []
+    #     for pump_i in range(n_pump):
+    #         pump_mean25.append(ls_sub25["pump"+str(pump_i)])
 
-        mean_ = pd.Series(np.exp(pump_mean25))
-        mean_.index = annual_pump.index
+    #     mean_ = pd.Series(np.exp(pump_mean25))
+    #     mean_.index = annual_pump.index
 
-        # Isolating pumping data
-        pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-                               columns=["0"])
-        pump_df.index = annual_pump.index
-        df = pd.DataFrame(index=listdaily_pump.index)
-        df = pd.concat([df, pump_df], join="outer",
-                       keys=["Date", "Date"], axis=1)
-        df.columns = df.columns.droplevel()
+    #     # Isolating pumping data
+    #     pump_df = pd.DataFrame(mean_, index=annual_pump.index,
+    #                            columns=["0"])
+    #     pump_df.index = annual_pump.index
+    #     df = pd.DataFrame(index=listdaily_pump.index)
+    #     df = pd.concat([df, pump_df], join="outer",
+    #                    keys=["Date", "Date"], axis=1)
+    #     df.columns = df.columns.droplevel()
 
-        # Interpolating pumping data
-        pump_interp25 = df.interpolate(method="cubic")
-        pump_interp25 = pump_interp25.dropna()
-        pump_interp25 = pump_interp25.rename(columns={"0": well_name})
-        model_plot25 = besttry_Pastasmodels[well_i].copy()
-        model_plot25.del_stressmodel("well")  # Deletes previous pumping
-        EstTotPump_ = ps.StressModel(pump_interp25,
-                                     rfunc=ps.Gamma(), name="well",
-                                     settings="well", up=False)
-        model_plot25.add_stressmodel(EstTotPump_)
+    #     # Interpolating pumping data
+    #     pump_interp25 = df.interpolate(method="cubic")
+    #     pump_interp25 = pump_interp25.dropna()
+    #     pump_interp25 = pump_interp25.rename(columns={"0": well_name})
+    #     model_plot25 = besttry_Pastasmodels[well_i].copy()
+    #     model_plot25.del_stressmodel("well")  # Deletes previous pumping
+    #     EstTotPump_ = ps.StressModel(pump_interp25,
+    #                                  rfunc=ps.Gamma(), name="well",
+    #                                  settings="well", up=False)
+    #     model_plot25.add_stressmodel(EstTotPump_)
 
-        # Assigns parameters to previous optimal parameters and SD
-        for param_i in param_index:
+    #     # Assigns parameters to previous optimal parameters and SD
+    #     for param_i in param_index:
 
-            model_plot25.set_parameter(name=param_names[param_i],
-                                       initial=ls_sub25[
-                                           model_plot25.parameters[
-                                               "optimal"].index[param_i]+str(well_i)],
-                                       optimal=ls_sub25[
-                                           model_plot25.parameters[
-                                               "optimal"].index[param_i]+str(well_i)])
+    #         model_plot25.set_parameter(name=param_names[param_i],
+    #                                    initial=ls_sub25[
+    #                                        model_plot25.parameters[
+    #                                            "optimal"].index[param_i]+str(well_i)],
+    #                                    optimal=ls_sub25[
+    #                                        model_plot25.parameters[
+    #                                            "optimal"].index[param_i]+str(well_i)])
 
-        model_plotls25.append(model_plot25)
+    #     model_plotls25.append(model_plot25)
 
-    # %% BEST SUB TRY
+    # # %% BEST SUB TRY
 
-    tmin = "1978"
-    tmax = "2020"
+    # tmin = "1978"
+    # tmax = "2020"
 
-    # Reading in thickness and storage data
-    path = os.path.join(os.path.abspath("inputs"),
-                        "SUBParametersPriortoManual.xlsx")
-    Thick_data = pd.read_excel(path, sheet_name="Thickness",
-                               index_col=0)  # Thickness
-    Sskv_data = pd.read_excel(path,
-                              sheet_name="Sskv",
-                              index_col=0)  # Sskv
-    Sske_data = pd.read_excel(path,
-                              sheet_name="Sske",
-                              index_col=0)  # Ssk
-    K_data = pd.read_excel(path,
-                           sheet_name="K",
-                           index_col=0)  # K
+    # # Reading in thickness and storage data
+    # path = os.path.join(os.path.abspath("inputs"),
+    #                     "SUBParametersPriortoManual.xlsx")
+    # Thick_data = pd.read_excel(path, sheet_name="Thickness",
+    #                            index_col=0)  # Thickness
+    # Sskv_data = pd.read_excel(path,
+    #                           sheet_name="Sskv",
+    #                           index_col=0)  # Sskv
+    # Sske_data = pd.read_excel(path,
+    #                           sheet_name="Sske",
+    #                           index_col=0)  # Ssk
+    # K_data = pd.read_excel(path,
+    #                        sheet_name="K",
+    #                        index_col=0)  # K
 
-    # Random multipler for each well nest
-    for wellnest in wellnestlist:
+    # # Random multipler for each well nest
+    # for wellnest in wellnestlist:
 
-        Sskv_data.loc[wellnest] *= np.exp(ls_sub25[p_multop[1]+"0"])
+    #     Sskv_data.loc[wellnest] *= np.exp(ls_sub25[p_multop[1]+"0"])
 
-        Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
-        Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
+    #     Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
+    #     Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
 
-        K_data.loc[wellnest] *= np.exp(ls_sub25[p_multop[1]+"1"])
+    #     K_data.loc[wellnest] *= np.exp(ls_sub25[p_multop[1]+"1"])
 
-    # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
-    # simulated groundwater in the aquifers
-    mode = "Pastas"
+    # # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
+    # # simulated groundwater in the aquifers
+    # mode = "Pastas"
 
-    if pumpexperiment == "pumpingcase1":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//bangkok-based//")
+    # if pumpexperiment == "pumpingcase1":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//bangkok-based//")
 
-    # Cyclical pump
-    elif pumpexperiment == "cyclical":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+    # # Cyclical pump
+    # elif pumpexperiment == "cyclical":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//cyclical_newobs//")
 
-    # Simple pump
-    elif pumpexperiment == "simpleexp":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+    # # Simple pump
+    # elif pumpexperiment == "simpleexp":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
-    # Pumping flag, for PASTAS, if changing pumping scenario
-    pumpflag = 1
-    ppath = os.path.join(os.path.abspath("inputs"), "BasinPumping.xlsx")
-    psheet = "EstTotalPump_54-60_Int50"
+    # # Pumping flag, for PASTAS, if changing pumping scenario
+    # pumpflag = 1
+    # ppath = os.path.join(os.path.abspath("inputs"), "BasinPumping.xlsx")
+    # psheet = "EstTotalPump_54-60_Int50"
 
-    # Convergence criteria
-    CC = 1 * 10**-5
+    # # Convergence criteria
+    # CC = 1 * 10**-5
 
-    # Number of nodes in clay
-    node_num = 10
+    # # Number of nodes in clay
+    # node_num = 10
 
-    # Using available heads as proxy for missing
-    proxyflag = 1
+    # # Using available heads as proxy for missing
+    # proxyflag = 1
 
-    # Repeat interp for each well
-    pump_interp25 = pd.concat(
-        [pump_interp25.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+    # # Repeat interp for each well
+    # pump_interp25 = pd.concat(
+    #     [pump_interp25.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
 
-    # Reorder well list to shallow to deep aquifers
-    # BK, PD, NL, NB
-    well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
-                  if y in x]
+    # # Reorder well list to shallow to deep aquifers
+    # # BK, PD, NL, NB
+    # well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
+    #               if y in x]
 
-    pump_interp25.columns = well_names
+    # pump_interp25.columns = well_names
 
-    # Calculates subsidence
-    all_results, sub_total, subv_total = bkk_sub_gw.\
-        bkk_sub.bkk_subsidence(wellnestlist,
-                               mode, tmin,
-                               tmax,
-                               Thick_data,
-                               K_data,
-                               Sskv_data,
-                               Sske_data,
-                               CC=CC,
-                               Nz=node_num,
-                               ic_run=True,
-                               proxyflag=proxyflag,
-                               pumpflag=pumpflag,
-                               pump_path=ppath,
-                               pump_sheet=psheet,
-                               pump_series=pump_interp25,
-                               model_path=modelpath, califlag=0,
-                               esmdaflag=0, user_models=model_plotls25)
+    # # Calculates subsidence
+    # all_results, sub_total, subv_total = bkk_sub_gw.\
+    #     bkk_sub.bkk_subsidence(wellnestlist,
+    #                            mode, tmin,
+    #                            tmax,
+    #                            Thick_data,
+    #                            K_data,
+    #                            Sskv_data,
+    #                            Sske_data,
+    #                            CC=CC,
+    #                            Nz=node_num,
+    #                            ic_run=True,
+    #                            proxyflag=proxyflag,
+    #                            pumpflag=pumpflag,
+    #                            pump_path=ppath,
+    #                            pump_sheet=psheet,
+    #                            pump_series=pump_interp25,
+    #                            model_path=modelpath, califlag=0,
+    #                            esmdaflag=0, user_models=model_plotls25)
 
-    # Post process data
-    sub_total, subv_total, ann_sub, \
-        avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
-                                                 sub_total,
-                                                 subv_total,
-                                                 all_results)
+    # # Post process data
+    # sub_total, subv_total, ann_sub, \
+    #     avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
+    #                                              sub_total,
+    #                                              subv_total,
+    #                                              all_results)
 
-    bestsubtry25 = ann_sub.copy()
+    # bestsubtry25 = ann_sub.copy()
 
-    lsreg_sub.append(bestsubtry25)
-    lsreg_gw.append(model_plotls25)
-    lsreg_pump.append(pd.Series(np.exp(pump_mean25)))
+    # lsreg_sub.append(bestsubtry25)
+    # lsreg_gw.append(model_plotls25)
+    # lsreg_pump.append(pd.Series(np.exp(pump_mean25)))
 
     # %% 30 regularized least squares
 
@@ -1349,12 +1350,12 @@ if pumpexperiment == "simpleexp":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -1414,12 +1415,198 @@ if pumpexperiment == "simpleexp":
     lsreg_gw.append(model_plotls30)
     lsreg_pump.append(pd.Series(np.exp(pump_mean30)))
 
-    # %% 31 regularized least squares
+    # # %% 31 regularized least squares
+
+    # # save fit report to a file:
+    # with open(os.path.abspath(
+    #         lspath + "//" +
+    #         wellnestlist[0] + "_LSreg31.0_modelresult.txt"),
+    #         'r') as fh:
+    #     temp = fh.readlines()
+    #     temp = [x.replace("\n", "") for x in temp]
+    #     temp = temp[
+    #         temp.index("[[Variables]]") + 1:temp.index(
+    #             "[[Correlations]] (unreported correlations are < 0.100)")]
+    #     # temp = temp[
+    #     #     temp.index("[[Variables]]") + 1:]
+    # fh.close()
+
+    # # Saving variables and values
+    # ls_sub31 = {}
+
+    # # Saving values from string
+    # for temp_i in range(len(temp)):
+    #     variable_name = temp[temp_i].split(":")[0].strip()
+
+    #     # Constant d lines are too long
+    #     if "constant_d" in variable_name:
+    #         ls_sub31[variable_name] = float(temp[temp_i][16:28])
+    #     else:
+    #         ls_sub31[variable_name] = float(temp[temp_i][14:25])
+
+    # # Saving model plots for least squares
+    # model_plotls31 = []
+
+    # # For all wells in well nest
+    # for well_i, wells in enumerate(well_names):
+
+    #     # Name of well as a string
+    #     well_name = wells
+    #     #######################################################################
+
+    #     # Saving pumping
+    #     pump_mean31 = []
+    #     for pump_i in range(n_pump):
+    #         pump_mean31.append(ls_sub31["pump"+str(pump_i)])
+
+    #     mean_ = pd.Series(np.exp(pump_mean31))
+    #     mean_.index = annual_pump.index
+
+    #     # Isolating pumping data
+    #     pump_df = pd.DataFrame(mean_, index=annual_pump.index,
+    #                            columns=["0"])
+    #     pump_df.index = annual_pump.index
+    #     df = pd.DataFrame(index=listdaily_pump.index)
+    #     df = pd.concat([df, pump_df], join="outer",
+    #                    keys=["Date", "Date"], axis=1)
+    #     df.columns = df.columns.droplevel()
+
+    #     # Interpolating pumping data
+    #     pump_interp31 = df.interpolate(method="cubic")
+    #     pump_interp31 = pump_interp31.dropna()
+    #     pump_interp31 = pump_interp31.rename(columns={"0": well_name})
+    #     model_plot31 = besttry_Pastasmodels[well_i].copy()
+    #     model_plot31.del_stressmodel("well")  # Deletes previous pumping
+    #     EstTotPump_ = ps.StressModel(pump_interp31,
+    #                                  rfunc=ps.Gamma(), name="well",
+    #                                  settings="well", up=False)
+    #     model_plot31.add_stressmodel(EstTotPump_)
+
+    #     # Assigns parameters to previous optimal parameters and SD
+    #     for param_i in param_index:
+
+    #         model_plot31.set_parameter(name=param_names[param_i],
+    #                                    initial=ls_sub31[
+    #                                        model_plot31.parameters[
+    #                                            "optimal"].index[param_i]+str(well_i)],
+    #                                    optimal=ls_sub31[
+    #                                        model_plot31.parameters[
+    #                                            "optimal"].index[param_i]+str(well_i)])
+
+    #     model_plotls31.append(model_plot31)
+
+    # # %% BEST SUB TRY
+
+    # tmin = "1978"
+    # tmax = "2020"
+
+    # # Reading in thickness and storage data
+    # path = os.path.join(os.path.abspath("inputs"),
+    #                     "SUBParametersPriortoManual.xlsx")
+    # Thick_data = pd.read_excel(path, sheet_name="Thickness",
+    #                            index_col=0)  # Thickness
+    # Sskv_data = pd.read_excel(path,
+    #                           sheet_name="Sskv",
+    #                           index_col=0)  # Sskv
+    # Sske_data = pd.read_excel(path,
+    #                           sheet_name="Sske",
+    #                           index_col=0)  # Ssk
+    # K_data = pd.read_excel(path,
+    #                        sheet_name="K",
+    #                        index_col=0)  # K
+
+    # # Random multipler for each well nest
+    # for wellnest in wellnestlist:
+
+    #     Sskv_data.loc[wellnest] *= np.exp(ls_sub31[p_multop[1]+"0"])
+
+    #     Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
+    #     Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
+
+    #     K_data.loc[wellnest] *= np.exp(ls_sub31[p_multop[1]+"1"])
+
+    # # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
+    # # simulated groundwater in the aquifers
+    # mode = "Pastas"
+
+    # if pumpexperiment == "pumpingcase1":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//bangkok-based//")
+
+    # # Cyclical pump
+    # elif pumpexperiment == "cyclical":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//cyclical_newobs//")
+
+    # # Simple pump
+    # elif pumpexperiment == "simpleexp":
+    #     # Folder to save/import graph and model
+    #     modelpath = os.path.abspath("models//cowboyhat_newobs//")
+
+    # # Pumping flag, for PASTAS, if changing pumping scenario
+    # pumpflag = 1
+    # ppath = os.path.join(os.path.abspath("inputs"), "BasinPumping.xlsx")
+    # psheet = "EstTotalPump_54-60_Int50"
+
+    # # Convergence criteria
+    # CC = 1 * 10**-5
+
+    # # Number of nodes in clay
+    # node_num = 10
+
+    # # Using available heads as proxy for missing
+    # proxyflag = 1
+
+    # # Repeat interp for each well
+    # pump_interp31 = pd.concat(
+    #     [pump_interp31.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+
+    # # Reorder well list to shallow to deep aquifers
+    # # BK, PD, NL, NB
+    # well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
+    #               if y in x]
+
+    # pump_interp31.columns = well_names
+
+    # # Calculates subsidence
+    # all_results, sub_total, subv_total = bkk_sub_gw.\
+    #     bkk_sub.bkk_subsidence(wellnestlist,
+    #                            mode, tmin,
+    #                            tmax,
+    #                            Thick_data,
+    #                            K_data,
+    #                            Sskv_data,
+    #                            Sske_data,
+    #                            CC=CC,
+    #                            Nz=node_num,
+    #                            ic_run=True,
+    #                            proxyflag=proxyflag,
+    #                            pumpflag=pumpflag,
+    #                            pump_path=ppath,
+    #                            pump_sheet=psheet,
+    #                            pump_series=pump_interp31,
+    #                            model_path=modelpath, califlag=0,
+    #                            esmdaflag=0, user_models=model_plotls31)
+
+    # # Post process data
+    # sub_total, subv_total, ann_sub, \
+    #     avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
+    #                                              sub_total,
+    #                                              subv_total,
+    #                                              all_results)
+
+    # bestsubtry31 = ann_sub.copy()
+
+    # lsreg_sub.append(bestsubtry31)
+    # lsreg_gw.append(model_plotls31)
+    # lsreg_pump.append(pd.Series(np.exp(pump_mean31)))
+
+    # %% 40 regularized least squares
 
     # save fit report to a file:
     with open(os.path.abspath(
             lspath + "//" +
-            wellnestlist[0] + "_LSreg31.0_modelresult.txt"),
+            wellnestlist[0] + "_LSreg40.0_modelresult.txt"),
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
@@ -1431,7 +1618,7 @@ if pumpexperiment == "simpleexp":
     fh.close()
 
     # Saving variables and values
-    ls_sub31 = {}
+    ls_sub40 = {}
 
     # Saving values from string
     for temp_i in range(len(temp)):
@@ -1439,12 +1626,12 @@ if pumpexperiment == "simpleexp":
 
         # Constant d lines are too long
         if "constant_d" in variable_name:
-            ls_sub31[variable_name] = float(temp[temp_i][16:28])
+            ls_sub40[variable_name] = float(temp[temp_i][16:28])
         else:
-            ls_sub31[variable_name] = float(temp[temp_i][14:25])
+            ls_sub40[variable_name] = float(temp[temp_i][14:25])
 
     # Saving model plots for least squares
-    model_plotls31 = []
+    model_plotls40 = []
 
     # For all wells in well nest
     for well_i, wells in enumerate(well_names):
@@ -1454,11 +1641,11 @@ if pumpexperiment == "simpleexp":
         #######################################################################
 
         # Saving pumping
-        pump_mean31 = []
+        pump_mean40 = []
         for pump_i in range(n_pump):
-            pump_mean31.append(ls_sub31["pump"+str(pump_i)])
+            pump_mean40.append(ls_sub40["pump"+str(pump_i)])
 
-        mean_ = pd.Series(np.exp(pump_mean31))
+        mean_ = pd.Series(np.exp(pump_mean40))
         mean_.index = annual_pump.index
 
         # Isolating pumping data
@@ -1471,28 +1658,28 @@ if pumpexperiment == "simpleexp":
         df.columns = df.columns.droplevel()
 
         # Interpolating pumping data
-        pump_interp31 = df.interpolate(method="cubic")
-        pump_interp31 = pump_interp31.dropna()
-        pump_interp31 = pump_interp31.rename(columns={"0": well_name})
-        model_plot31 = besttry_Pastasmodels[well_i].copy()
-        model_plot31.del_stressmodel("well")  # Deletes previous pumping
-        EstTotPump_ = ps.StressModel(pump_interp31,
+        pump_interp40 = df.interpolate(method="cubic")
+        pump_interp40 = pump_interp40.dropna()
+        pump_interp40 = pump_interp40.rename(columns={"0": well_name})
+        model_plot40 = besttry_Pastasmodels[well_i].copy()
+        model_plot40.del_stressmodel("well")  # Deletes previous pumping
+        EstTotPump_ = ps.StressModel(pump_interp40,
                                      rfunc=ps.Gamma(), name="well",
                                      settings="well", up=False)
-        model_plot31.add_stressmodel(EstTotPump_)
+        model_plot40.add_stressmodel(EstTotPump_)
 
         # Assigns parameters to previous optimal parameters and SD
         for param_i in param_index:
 
-            model_plot31.set_parameter(name=param_names[param_i],
-                                       initial=ls_sub31[
-                                           model_plot31.parameters[
+            model_plot40.set_parameter(name=param_names[param_i],
+                                       initial=ls_sub40[
+                                           model_plot40.parameters[
                                                "optimal"].index[param_i]+str(well_i)],
-                                       optimal=ls_sub31[
-                                           model_plot31.parameters[
+                                       optimal=ls_sub40[
+                                           model_plot40.parameters[
                                                "optimal"].index[param_i]+str(well_i)])
 
-        model_plotls31.append(model_plot31)
+        model_plotls40.append(model_plot40)
 
     # %% BEST SUB TRY
 
@@ -1517,12 +1704,12 @@ if pumpexperiment == "simpleexp":
     # Random multipler for each well nest
     for wellnest in wellnestlist:
 
-        Sskv_data.loc[wellnest] *= np.exp(ls_sub31[p_multop[1]+"0"])
+        Sskv_data.loc[wellnest] *= np.exp(ls_sub40[p_multop[1]+"0"])
 
         Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
         Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
 
-        K_data.loc[wellnest] *= np.exp(ls_sub31[p_multop[1]+"1"])
+        K_data.loc[wellnest] *= np.exp(ls_sub40[p_multop[1]+"1"])
 
     # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
     # simulated groundwater in the aquifers
@@ -1535,12 +1722,12 @@ if pumpexperiment == "simpleexp":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -1557,15 +1744,15 @@ if pumpexperiment == "simpleexp":
     proxyflag = 1
 
     # Repeat interp for each well
-    pump_interp31 = pd.concat(
-        [pump_interp31.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+    pump_interp40 = pd.concat(
+        [pump_interp40.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
 
     # Reorder well list to shallow to deep aquifers
     # BK, PD, NL, NB
     well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
                   if y in x]
 
-    pump_interp31.columns = well_names
+    pump_interp40.columns = well_names
 
     # Calculates subsidence
     all_results, sub_total, subv_total = bkk_sub_gw.\
@@ -1583,9 +1770,9 @@ if pumpexperiment == "simpleexp":
                                pumpflag=pumpflag,
                                pump_path=ppath,
                                pump_sheet=psheet,
-                               pump_series=pump_interp31,
+                               pump_series=pump_interp40,
                                model_path=modelpath, califlag=0,
-                               esmdaflag=0, user_models=model_plotls31)
+                               esmdaflag=0, user_models=model_plotls40)
 
     # Post process data
     sub_total, subv_total, ann_sub, \
@@ -1594,197 +1781,11 @@ if pumpexperiment == "simpleexp":
                                                  subv_total,
                                                  all_results)
 
-    bestsubtry31 = ann_sub.copy()
+    bestsubtry40 = ann_sub.copy()
 
-    lsreg_sub.append(bestsubtry31)
-    lsreg_gw.append(model_plotls31)
-    lsreg_pump.append(pd.Series(np.exp(pump_mean31)))
-
-    # %% 35 regularized least squares
-
-    # save fit report to a file:
-    with open(os.path.abspath(
-            lspath + "//" +
-            wellnestlist[0] + "_LSreg35.0_modelresult.txt"),
-            'r') as fh:
-        temp = fh.readlines()
-        temp = [x.replace("\n", "") for x in temp]
-        temp = temp[
-            temp.index("[[Variables]]") + 1:temp.index(
-                "[[Correlations]] (unreported correlations are < 0.100)")]
-        # temp = temp[
-        #     temp.index("[[Variables]]") + 1:]
-    fh.close()
-
-    # Saving variables and values
-    ls_sub35 = {}
-
-    # Saving values from string
-    for temp_i in range(len(temp)):
-        variable_name = temp[temp_i].split(":")[0].strip()
-
-        # Constant d lines are too long
-        if "constant_d" in variable_name:
-            ls_sub35[variable_name] = float(temp[temp_i][16:28])
-        else:
-            ls_sub35[variable_name] = float(temp[temp_i][14:25])
-
-    # Saving model plots for least squares
-    model_plotls35 = []
-
-    # For all wells in well nest
-    for well_i, wells in enumerate(well_names):
-
-        # Name of well as a string
-        well_name = wells
-        #######################################################################
-
-        # Saving pumping
-        pump_mean35 = []
-        for pump_i in range(n_pump):
-            pump_mean35.append(ls_sub35["pump"+str(pump_i)])
-
-        mean_ = pd.Series(np.exp(pump_mean35))
-        mean_.index = annual_pump.index
-
-        # Isolating pumping data
-        pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-                               columns=["0"])
-        pump_df.index = annual_pump.index
-        df = pd.DataFrame(index=listdaily_pump.index)
-        df = pd.concat([df, pump_df], join="outer",
-                       keys=["Date", "Date"], axis=1)
-        df.columns = df.columns.droplevel()
-
-        # Interpolating pumping data
-        pump_interp35 = df.interpolate(method="cubic")
-        pump_interp35 = pump_interp35.dropna()
-        pump_interp35 = pump_interp35.rename(columns={"0": well_name})
-        model_plot35 = besttry_Pastasmodels[well_i].copy()
-        model_plot35.del_stressmodel("well")  # Deletes previous pumping
-        EstTotPump_ = ps.StressModel(pump_interp35,
-                                     rfunc=ps.Gamma(), name="well",
-                                     settings="well", up=False)
-        model_plot35.add_stressmodel(EstTotPump_)
-
-        # Assigns parameters to previous optimal parameters and SD
-        for param_i in param_index:
-
-            model_plot35.set_parameter(name=param_names[param_i],
-                                       initial=ls_sub35[
-                                           model_plot35.parameters[
-                                               "optimal"].index[param_i]+str(well_i)],
-                                       optimal=ls_sub35[
-                                           model_plot35.parameters[
-                                               "optimal"].index[param_i]+str(well_i)])
-
-        model_plotls35.append(model_plot35)
-
-    # %% BEST SUB TRY
-
-    tmin = "1978"
-    tmax = "2020"
-
-    # Reading in thickness and storage data
-    path = os.path.join(os.path.abspath("inputs"),
-                        "SUBParametersPriortoManual.xlsx")
-    Thick_data = pd.read_excel(path, sheet_name="Thickness",
-                               index_col=0)  # Thickness
-    Sskv_data = pd.read_excel(path,
-                              sheet_name="Sskv",
-                              index_col=0)  # Sskv
-    Sske_data = pd.read_excel(path,
-                              sheet_name="Sske",
-                              index_col=0)  # Ssk
-    K_data = pd.read_excel(path,
-                           sheet_name="K",
-                           index_col=0)  # K
-
-    # Random multipler for each well nest
-    for wellnest in wellnestlist:
-
-        Sskv_data.loc[wellnest] *= np.exp(ls_sub35[p_multop[1]+"0"])
-
-        Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
-        Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
-
-        K_data.loc[wellnest] *= np.exp(ls_sub35[p_multop[1]+"1"])
-
-    # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
-    # simulated groundwater in the aquifers
-    mode = "Pastas"
-
-    if pumpexperiment == "pumpingcase1":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//bangkok-based//")
-
-    # Cyclical pump
-    elif pumpexperiment == "cyclical":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
-
-    # Simple pump
-    elif pumpexperiment == "simpleexp":
-        # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
-
-    # Pumping flag, for PASTAS, if changing pumping scenario
-    pumpflag = 1
-    ppath = os.path.join(os.path.abspath("inputs"), "BasinPumping.xlsx")
-    psheet = "EstTotalPump_54-60_Int50"
-
-    # Convergence criteria
-    CC = 1 * 10**-5
-
-    # Number of nodes in clay
-    node_num = 10
-
-    # Using available heads as proxy for missing
-    proxyflag = 1
-
-    # Repeat interp for each well
-    pump_interp35 = pd.concat(
-        [pump_interp35.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
-
-    # Reorder well list to shallow to deep aquifers
-    # BK, PD, NL, NB
-    well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
-                  if y in x]
-
-    pump_interp35.columns = well_names
-
-    # Calculates subsidence
-    all_results, sub_total, subv_total = bkk_sub_gw.\
-        bkk_sub.bkk_subsidence(wellnestlist,
-                               mode, tmin,
-                               tmax,
-                               Thick_data,
-                               K_data,
-                               Sskv_data,
-                               Sske_data,
-                               CC=CC,
-                               Nz=node_num,
-                               ic_run=True,
-                               proxyflag=proxyflag,
-                               pumpflag=pumpflag,
-                               pump_path=ppath,
-                               pump_sheet=psheet,
-                               pump_series=pump_interp35,
-                               model_path=modelpath, califlag=0,
-                               esmdaflag=0, user_models=model_plotls35)
-
-    # Post process data
-    sub_total, subv_total, ann_sub, \
-        avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
-                                                 sub_total,
-                                                 subv_total,
-                                                 all_results)
-
-    bestsubtry35 = ann_sub.copy()
-
-    lsreg_sub.append(bestsubtry35)
-    lsreg_gw.append(model_plotls35)
-    lsreg_pump.append(pd.Series(np.exp(pump_mean35)))
+    lsreg_sub.append(bestsubtry40)
+    lsreg_gw.append(model_plotls40)
+    lsreg_pump.append(pd.Series(np.exp(pump_mean40)))
 
     # %% 50 regularized least squares
 
@@ -1907,12 +1908,12 @@ if pumpexperiment == "simpleexp":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -1972,6 +1973,192 @@ if pumpexperiment == "simpleexp":
     lsreg_gw.append(model_plotls50)
     lsreg_pump.append(pd.Series(np.exp(pump_mean50)))
 
+    # %% 60 regularized least squares
+
+    # save fit report to a file:
+    with open(os.path.abspath(
+            lspath + "//" +
+            wellnestlist[0] + "_LSreg60.0_modelresult.txt"),
+            'r') as fh:
+        temp = fh.readlines()
+        temp = [x.replace("\n", "") for x in temp]
+        temp = temp[
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
+    fh.close()
+
+    # Saving variables and values
+    ls_sub60 = {}
+
+    # Saving values from string
+    for temp_i in range(len(temp)):
+        variable_name = temp[temp_i].split(":")[0].strip()
+
+        # Constant d lines are too long
+        if "constant_d" in variable_name:
+            ls_sub60[variable_name] = float(temp[temp_i][16:28])
+        else:
+            ls_sub60[variable_name] = float(temp[temp_i][14:25])
+
+    # Saving model plots for least squares
+    model_plotls60 = []
+
+    # For all wells in well nest
+    for well_i, wells in enumerate(well_names):
+
+        # Name of well as a string
+        well_name = wells
+        #######################################################################
+
+        # Saving pumping
+        pump_mean60 = []
+        for pump_i in range(n_pump):
+            pump_mean60.append(ls_sub60["pump"+str(pump_i)])
+
+        mean_ = pd.Series(np.exp(pump_mean60))
+        mean_.index = annual_pump.index
+
+        # Isolating pumping data
+        pump_df = pd.DataFrame(mean_, index=annual_pump.index,
+                               columns=["0"])
+        pump_df.index = annual_pump.index
+        df = pd.DataFrame(index=listdaily_pump.index)
+        df = pd.concat([df, pump_df], join="outer",
+                       keys=["Date", "Date"], axis=1)
+        df.columns = df.columns.droplevel()
+
+        # Interpolating pumping data
+        pump_interp60 = df.interpolate(method="cubic")
+        pump_interp60 = pump_interp60.dropna()
+        pump_interp60 = pump_interp60.rename(columns={"0": well_name})
+        model_plot60 = besttry_Pastasmodels[well_i].copy()
+        model_plot60.del_stressmodel("well")  # Deletes previous pumping
+        EstTotPump_ = ps.StressModel(pump_interp60,
+                                     rfunc=ps.Gamma(), name="well",
+                                     settings="well", up=False)
+        model_plot60.add_stressmodel(EstTotPump_)
+
+        # Assigns parameters to previous optimal parameters and SD
+        for param_i in param_index:
+
+            model_plot60.set_parameter(name=param_names[param_i],
+                                       initial=ls_sub60[
+                                           model_plot60.parameters[
+                                               "optimal"].index[param_i]+str(well_i)],
+                                       optimal=ls_sub60[
+                                           model_plot60.parameters[
+                                               "optimal"].index[param_i]+str(well_i)])
+
+        model_plotls60.append(model_plot60)
+
+    # %% BEST SUB TRY
+
+    tmin = "1978"
+    tmax = "2020"
+
+    # Reading in thickness and storage data
+    path = os.path.join(os.path.abspath("inputs"),
+                        "SUBParametersPriortoManual.xlsx")
+    Thick_data = pd.read_excel(path, sheet_name="Thickness",
+                               index_col=0)  # Thickness
+    Sskv_data = pd.read_excel(path,
+                              sheet_name="Sskv",
+                              index_col=0)  # Sskv
+    Sske_data = pd.read_excel(path,
+                              sheet_name="Sske",
+                              index_col=0)  # Ssk
+    K_data = pd.read_excel(path,
+                           sheet_name="K",
+                           index_col=0)  # K
+
+    # Random multipler for each well nest
+    for wellnest in wellnestlist:
+
+        Sskv_data.loc[wellnest] *= np.exp(ls_sub60[p_multop[1]+"0"])
+
+        Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
+        Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
+
+        K_data.loc[wellnest] *= np.exp(ls_sub60[p_multop[1]+"1"])
+
+    # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
+    # simulated groundwater in the aquifers
+    mode = "Pastas"
+
+    if pumpexperiment == "pumpingcase1":
+        # Folder to save/import graph and model
+        modelpath = os.path.abspath("models//bangkok-based//")
+
+    # Cyclical pump
+    elif pumpexperiment == "cyclical":
+        # Folder to save/import graph and model
+        modelpath = os.path.abspath("models//cyclical_newobs//")
+
+    # Simple pump
+    elif pumpexperiment == "simpleexp":
+        # Folder to save/import graph and model
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
+
+    # Pumping flag, for PASTAS, if changing pumping scenario
+    pumpflag = 1
+    ppath = os.path.join(os.path.abspath("inputs"), "BasinPumping.xlsx")
+    psheet = "EstTotalPump_54-60_Int50"
+
+    # Convergence criteria
+    CC = 1 * 10**-5
+
+    # Number of nodes in clay
+    node_num = 10
+
+    # Using available heads as proxy for missing
+    proxyflag = 1
+
+    # Repeat interp for each well
+    pump_interp60 = pd.concat(
+        [pump_interp60.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+
+    # Reorder well list to shallow to deep aquifers
+    # BK, PD, NL, NB
+    well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
+                  if y in x]
+
+    pump_interp60.columns = well_names
+
+    # Calculates subsidence
+    all_results, sub_total, subv_total = bkk_sub_gw.\
+        bkk_sub.bkk_subsidence(wellnestlist,
+                               mode, tmin,
+                               tmax,
+                               Thick_data,
+                               K_data,
+                               Sskv_data,
+                               Sske_data,
+                               CC=CC,
+                               Nz=node_num,
+                               ic_run=True,
+                               proxyflag=proxyflag,
+                               pumpflag=pumpflag,
+                               pump_path=ppath,
+                               pump_sheet=psheet,
+                               pump_series=pump_interp60,
+                               model_path=modelpath, califlag=0,
+                               esmdaflag=0, user_models=model_plotls60)
+
+    # Post process data
+    sub_total, subv_total, ann_sub, \
+        avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
+                                                 sub_total,
+                                                 subv_total,
+                                                 all_results)
+
+    bestsubtry60 = ann_sub.copy()
+
+    lsreg_sub.append(bestsubtry60)
+    lsreg_gw.append(model_plotls60)
+    lsreg_pump.append(pd.Series(np.exp(pump_mean60)))
+
     def generate_simppumping_ens(ann_pump, n):
         """Generates ensemble of time series of groundwater pumping.
 
@@ -2003,6 +2190,8 @@ if pumpexperiment == "simpleexp":
 
         return df
 
+
+# %%
 
 elif pumpexperiment == "pumpingcase1":
     # %% 15 regularized least squares
@@ -2126,12 +2315,12 @@ elif pumpexperiment == "pumpingcase1":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -2312,12 +2501,12 @@ elif pumpexperiment == "pumpingcase1":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -2498,12 +2687,12 @@ elif pumpexperiment == "pumpingcase1":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -2684,12 +2873,12 @@ elif pumpexperiment == "pumpingcase1":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -2870,12 +3059,12 @@ elif pumpexperiment == "pumpingcase1":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3057,12 +3246,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3131,11 +3320,11 @@ elif pumpexperiment == "cyclical":
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
-        # temp = temp[
-        #     temp.index("[[Variables]]") + 1:temp.index(
-        #         "[[Correlations]] (unreported correlations are < 0.100)")]
         temp = temp[
-            temp.index("[[Variables]]") + 1:]
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
     fh.close()
 
     # Saving variables and values
@@ -3243,12 +3432,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3429,12 +3618,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3615,12 +3804,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3689,11 +3878,11 @@ elif pumpexperiment == "cyclical":
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
-        # temp = temp[
-        #     temp.index("[[Variables]]") + 1:temp.index(
-        #         "[[Correlations]] (unreported correlations are < 0.100)")]
         temp = temp[
-            temp.index("[[Variables]]") + 1:]
+            temp.index("[[Variables]]") + 1:temp.index(
+                "[[Correlations]] (unreported correlations are < 0.100)")]
+        # temp = temp[
+        #     temp.index("[[Variables]]") + 1:]
     fh.close()
 
     # Saving variables and values
@@ -3801,12 +3990,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -3987,12 +4176,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -4173,12 +4362,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -4359,12 +4548,12 @@ elif pumpexperiment == "cyclical":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # Simple pump
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cowboyhat//")
+        modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
     # Pumping flag, for PASTAS, if changing pumping scenario
     pumpflag = 1
@@ -4483,10 +4672,13 @@ def generate_pumping_ens(ann_pump, n, pumpexperiment):
     return df
 # %% Objective Function calculation
 
+
 if pumpexperiment == "simpleexp":
-    lsreg = [0, 10, 20, 25, 30, 31, 35, 50]
+    lsreg = [0, 10, 20, 30, 40, 50, 60]
 elif pumpexperiment == "pumpingcase1":
     lsreg = [0, 15, 25, 35, 40, 60]
+elif pumpexperiment == "cyclical":
+    lsreg = [0, 10, 20, 25, 30, 35, 40, 50, 60]
 index = gw_obs_indices[0]
 
 mobjfc = []
@@ -4542,7 +4734,8 @@ for i, txt in enumerate(lsreg[1:]):
     if type(txt) is str:
         ax.annotate(txt, (robjfc[i], mobjfc[i]))
     else:
-        ax.annotate(txt/100, (robjfc[i], mobjfc[i]))
+        if txt == 20:
+            ax.annotate(txt/100, (robjfc[i], mobjfc[i]))
 
 if pumpexperiment == "pumpingcase1":
     plt.title("Bangkok Experiment L-Curve")

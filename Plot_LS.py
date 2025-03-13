@@ -54,8 +54,8 @@ a = 3.68
 b = .15
 c = 4.8
 
-pumpexperiment = "cyclical"
-barerror = False
+pumpexperiment = "simpleexp"
+barerror = True
 
 # Annual pumping data (mean), std
 pumppath = os.path.join(os.path.abspath("inputs"),
@@ -109,13 +109,13 @@ if mode == "Pastas":
     # Cyclical pump
     elif pumpexperiment == "cyclical":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//cyclical//")
+        modelpath = os.path.abspath("models//cyclical_newobs//")
 
     # pumping case 1: true 1980-1990 arbitrarily lower
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
         modelpath = os.path.abspath(
-            "models//cowboyhat//")
+            "models//cowboyhat_newobs//")
 
 # Path to save models
 tot_path = os.path.abspath("inputs")
@@ -124,7 +124,7 @@ tot_path = os.path.abspath("inputs")
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//cowboyhat//")
+        "figures//cowboyhat_newobs//")
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
@@ -134,7 +134,7 @@ elif pumpexperiment == "pumpingcase1":
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//cyclical//")
+        "figures//cyclical_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -320,11 +320,11 @@ for num_well, wells in enumerate(data.columns[-(len(data.columns)-2):]):
 
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//cowboyhat//")
+    lspath = os.path.abspath("models//cowboyhat_newobs//")
 
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//cyclical//")
+    lspath = os.path.abspath("models//cyclical_newobs//")
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
@@ -453,12 +453,12 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -619,12 +619,12 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -686,7 +686,7 @@ if pumpexperiment == "simpleexp":
     # save fit report to a file:
     with open(os.path.abspath(
             lspath + "//" +
-            wellnestlist[0] + "_LSreg30.0_modelresult.txt"),
+            wellnestlist[0] + "_LSreg20.0_modelresult.txt"),
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
@@ -712,7 +712,7 @@ elif pumpexperiment == "cyclical":
     # save fit report to a file:
     with open(os.path.abspath(
             lspath + "//" +
-            wellnestlist[0] + "_LSreg40.0_modelresult.txt"),
+            wellnestlist[0] + "_LSreg60.0_modelresult.txt"),
             'r') as fh:
         temp = fh.readlines()
         temp = [x.replace("\n", "") for x in temp]
@@ -830,12 +830,12 @@ if pumpexperiment == "pumpingcase1":
 # Cyclical pump
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cyclical//")
+    modelpath = os.path.abspath("models//cyclical_newobs//")
 
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat//")
+    modelpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1

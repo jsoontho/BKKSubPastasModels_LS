@@ -87,7 +87,7 @@ pumpexperiment = "simpleexp"
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//cowboyhat//")
+    path = os.path.abspath("models//cowboyhat_newobs//")
 
 
 # Reading
@@ -208,7 +208,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cowboyhat//")
+        mpath = os.path.abspath("models//cowboyhat_newobs//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -257,7 +257,7 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne)
 
-lambda_ = 0.05
+lambda_ = 0.5
 # Number of ensembles
 n = 1
 for n_ens in range(n):

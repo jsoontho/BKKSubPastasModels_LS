@@ -305,9 +305,9 @@ if pumpexperiment == "pumpingcase1":
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
-    comppump = generate_pumping_ens(annual_pump, ne, option)
-
-lambda_ = 0.5
+    comppump = generate_pumping_ens(listdaily_pump, ne, pumpexperiment)
+    comppump = comppump.rename(columns={0: "Pump"})
+lambda_ = 0.1
 # Number of ensembles
 n = 1
 for n_ens in range(n):
