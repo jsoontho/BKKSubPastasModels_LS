@@ -34,6 +34,8 @@ from matplotlib.pyplot import cm
 from itertools import compress
 from matplotlib.dates import DateFormatter
 import warnings
+from itertools import product
+import datetime as dt
 
 # Bangkok Subsidence Model Package
 import bkk_sub_gw
@@ -45,7 +47,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # True parameters for Pastas and subsidence mult (a, b, c)
-Atrue = -.1
+Atrue = -1
 ntrue = 1.2
 atrue = 50
 dtrue = 2
@@ -55,6 +57,8 @@ b = .15
 c = 4.8
 
 pumpexperiment = "simpleexp"
+errorbar_nens = False
+errorbar_ls = True
 
 # Annual pumping data (mean), std
 pumppath = os.path.join(os.path.abspath("inputs"),
@@ -103,7 +107,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        modelpath = os.path.abspath("models//bangkok-based//")
+        modelpath = os.path.abspath("models//bangkok_SUBGW//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
@@ -114,7 +118,7 @@ if mode == "Pastas":
     elif pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
         modelpath = os.path.abspath(
-            "models//cowboyhat_SUB//")
+            "models//cowboyhat_SUBGW//")
 
 # Path to save models
 tot_path = os.path.abspath("inputs")
@@ -123,12 +127,12 @@ tot_path = os.path.abspath("inputs")
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//cowboyhat_SUB//")
+        "figures//cowboyhat_SUBGW//")
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
     figpath = os.path.abspath(
-        "figures//bangkok-based//")
+        "figures//bangkok_SUBGW//")
 
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
@@ -189,10 +193,12 @@ par_error.extend([30, 100, 100, 30])
 dist = ["norm", "norm", "norm", "norm"]
 
 # Esmda mode
-esmdaflag = "my_gwparam_subSELECT_pump"
+esmdaflag = "ls_gwparam_subSELECT"
+# esmdaflag = "ls_sub"
 
 # Index of interested parameters
 param_index = np.array([0, 1, 2, 3])
+# param_index = np.array([])
 
 # Reading in groundwater data
 full_path = os.path.join(tot_path, Wellnest_name[0] + ".xlsx")
@@ -242,7 +248,7 @@ sub_obs.Date = pd.to_datetime(sub_obs.Date, format="%Y-%m-%d")
 sub_obs.index = sub_obs.Date
 fullsubobs = sub_obs.copy()
 
-sub_obs = sub_obs[sub_obs.index <= "1996"]
+# sub_obs = sub_obs[sub_obs.index <= "1996"]
 
 # Saving gw dates
 gw_obs_indices = [sub_obs.Date]
@@ -283,9 +289,10 @@ time_mins_plot = []
 time_maxs_plot = []
 pastas_param = []
 
-# Pumping index
-# pump_index0 = n_param*num_wells
-# pump_index1 = n_param*num_wells + n_pump
+if "pump" in esmdaflag:
+    # Pumping index
+    pump_index0 = n_param*num_wells
+    pump_index1 = n_param*num_wells + n_pump
 
 # Random number generator
 rng = np.random.default_rng()
@@ -313,14 +320,16 @@ for num_well, wells in enumerate(data.columns[-(len(data.columns)-2):]):
 
     besttry_Pastasmodels.append(ml)
 
-    param_names = ml.parameters.index.values
+    if "gw" in esmdaflag:
+        param_names = ml.parameters.index.values[param_index]
 
 pumptrue = pumptrue.rename(columns={"0": well_name})
+
 # %% LS Import
 
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//cowboyhat_SUB//")
+    lspath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 elif pumpexperiment == "cyclical":
     # Folder to save/import graph and model
@@ -328,37 +337,54 @@ elif pumpexperiment == "cyclical":
 
 elif pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    lspath = os.path.abspath("models//bangkok-based//")
+    lspath = os.path.abspath("models//bangkok_SUBGW//")
 
-# save fit report to a file:
-with open(os.path.abspath(
-        lspath + "//" +
-        wellnestlist[0] + "_LSreg0_modelresult.txt"),
-        'r') as fh:
-    temp = fh.readlines()
-    temp = [x.replace("\n", "") for x in temp]
-    temp = temp[
-        temp.index("[[Variables]]") + 1:temp.index(
-            "[[Correlations]] (unreported correlations are < 0.100)")]
-    # temp = temp[
-    #     temp.index("[[Variables]]") + 1:]
-fh.close()
-
+# If number of ensemble == 1
+n = 1
 # Saving variables and values
 ls_sub_m = {}
-ls_error = []
 
-# Saving values from string
-for temp_i in range(len(temp)):
-    variable_name = temp[temp_i].split(":")[0].strip()
-    # Saving error
-    ls_error.append(float(temp[temp_i][33:43]))
-    # Constant d lines are too long
-    if "constant_d" in variable_name:
-        ls_sub_m[variable_name] = float(temp[temp_i][16:28])
+if errorbar_ls:
+    ls_error = []
+# For each ensemble member
+for n_ens in range(n):
 
-    else:
-        ls_sub_m[variable_name] = float(temp[temp_i][14:27])
+    # save fit report to a file:
+    with open(os.path.abspath(
+            lspath + "//" +
+            wellnestlist[0] + "_LSreg0_modelresult" + str(n_ens) + ".txt"),
+            'r') as fh:
+        temp = fh.readlines()
+        temp = [x.replace("\n", "") for x in temp]
+        try:
+            temp = temp[
+                temp.index("[[Variables]]") + 1:temp.index(
+                    "[[Correlations]] (unreported correlations are < 0.100)")]
+        except:
+            temp = temp[
+                temp.index("[[Variables]]") + 1:]
+    fh.close()
+
+    # Saving values from string
+    for temp_i in range(len(temp)):
+        variable_name = temp[temp_i].split(":")[0].strip()
+        if n_ens == 0:
+            ls_sub_m[variable_name] = []
+        if errorbar_ls:
+            temp_err = temp[temp_i].split("+/- ")[1].strip()
+            ls_error.append(float(temp_err[:10]))
+        # Constant d lines are too long
+        if "constant_d" in variable_name:
+            temp_val = temp[temp_i].split("+/- ")[0].strip()
+            ls_sub_m[variable_name].append(float(temp_val[12:]))
+
+        else:
+            if esmdaflag == "ls_sub":
+                temp_val = temp[temp_i].split("+/- ")[0].strip()
+                ls_sub_m[variable_name].append(float(temp_val[7:]))
+            else:
+                temp_val = temp[temp_i].split("+/- ")[0].strip()
+                ls_sub_m[variable_name].append(float(temp_val[9:]))
 
 # Saving model plots for least squares
 model_plotls = []
@@ -370,44 +396,77 @@ for well_i, wells in enumerate(well_names):
     well_name = wells
     #######################################################################
 
-    # Saving pumping
-    # pump_mean = []
-    # for pump_i in range(n_pump):
-    #     pump_mean.append(ls_sub_m["pump"+str(pump_i)])
-
-    # mean_ = pd.Series(np.exp(pump_mean))
-    # mean_.index = annual_pump.index
-
-    # # Isolating pumping data
-    # pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-    #                        columns=["0"])
-    # pump_df.index = annual_pump.index
-    # df = pd.DataFrame(index=listdaily_pump.index)
-    # df = pd.concat([df, pump_df], join="outer",
-    #                keys=["Date", "Date"], axis=1)
-    # df.columns = df.columns.droplevel()
-
-    # # Interpolating pumping data
-    # pump_interp = df.interpolate(method="cubic")
-    # pump_interp = pump_interp.dropna()
-    # pump_interp = pump_interp.rename(columns={"0": well_name})
     model_plot = besttry_Pastasmodels[well_i].copy()
-    # model_plot.del_stressmodel("well")  # Deletes previous pumping
-    # EstTotPump_ = ps.StressModel(pump_interp,
-    #                              rfunc=ps.Gamma(), name="well",
-    #                              settings="well", up=False)
-    # model_plot.add_stressmodel(EstTotPump_)
+    if "pump" in esmdaflag:
+        # Saving pumping
+        pump_mean = []
+        pump_std = []
+        for pump_i in range(n_pump):
+            pump_mean.append(np.mean(ls_sub_m["pump"+str(pump_i)]))
+            pump_std.append(np.std(ls_sub_m["pump"+str(pump_i)]))
 
-    # Assigns parameters to previous optimal parameters and SD
-    for param_i in param_index:
+        mean_ = pd.Series(np.exp(pump_mean))
+        mean_.index = annual_pump.index
 
-        model_plot.set_parameter(name=param_names[param_i],
-                                 initial=ls_sub_m[
-                                     model_plot.parameters[
-                                         "optimal"].index[param_i]+str(well_i)],
-                                 optimal=ls_sub_m[
-                                     model_plot.parameters[
-                                         "optimal"].index[param_i]+str(well_i)])
+        # Isolating pumping data
+        pump_df = pd.DataFrame(mean_, index=annual_pump.index,
+                               columns=["0"])
+        pump_df.index = annual_pump.index
+        df = pd.DataFrame(index=listdaily_pump.index)
+        df = pd.concat([df, pump_df], join="outer",
+                       keys=["Date", "Date"], axis=1)
+        df.columns = df.columns.droplevel()
+
+        # Interpolating pumping data
+        pump_interp = df.interpolate(method="cubic")
+        pump_interp = pump_interp.dropna()
+        pump_interp = pump_interp.rename(columns={"0": well_name})
+        model_plot.del_stressmodel("well")  # Deletes previous pumping
+        EstTotPump_ = ps.StressModel(pump_interp,
+                                     rfunc=ps.Gamma(), name="well",
+                                     settings="well", up=False)
+        model_plot.add_stressmodel(EstTotPump_)
+
+    if "gw" in esmdaflag:
+        # Assigns parameters to previous optimal parameters and SD
+        for param_i, param in enumerate(param_index):
+    
+            model_plot.set_parameter(name=param_names[param_i],
+                                     initial=np.mean(ls_sub_m[
+                                         model_plot.parameters[
+                                             "optimal"].index[param]+str(well_i)]),
+                                     optimal=np.mean(ls_sub_m[
+                                         model_plot.parameters[
+                                             "optimal"].index[param]+str(well_i)]))
+
+    # Other index
+    range_ = set(range(0, len(model_plot.parameters.iloc[:, 0])))
+    others_i = np.array(list(
+        set(param_index).symmetric_difference(range_)))
+
+    if n_param != 4:
+
+        # Other names
+        other_name = model_plot.parameters.index[others_i].values
+
+        for other_i, other in enumerate(other_name):
+            # Sets to optimal param
+            if other == "well_A":
+                model_plot.set_parameter(name=other,
+                                         initial=-1,
+                                         optimal=-1)
+            elif other == "well_n":
+                model_plot.set_parameter(name=other,
+                                         initial=1.2,
+                                         optimal=1.2)
+            elif other == "well_a":
+                model_plot.set_parameter(name=other,
+                                         initial=50,
+                                         optimal=50)
+            elif other == "constant_d":
+                model_plot.set_parameter(name=other,
+                                         initial=2,
+                                         optimal=2)
 
     model_plotls.append(model_plot)
 
@@ -434,12 +493,26 @@ K_data = pd.read_excel(path,
 # Random multipler for each well nest
 for wellnest in wellnestlist:
 
-    Sskv_data.loc[wellnest] *= np.exp(ls_sub_m[p_multop[1]+"0"])
+    if "sub" in esmdaflag:
+
+        if p_multop[1] == "SsK":
+
+            # Sskv_data.loc[wellnest] *= np.exp(np.mean(ls_sub_m[p_multop[1]+"0"]))
+            # K_data.loc[wellnest] *= np.exp(np.mean(ls_sub_m[p_multop[1]+"1"]))
+            Sskv_data.loc[wellnest] *= np.mean(ls_sub_m[p_multop[1]+"0"])
+            K_data.loc[wellnest] *= np.mean(ls_sub_m[p_multop[1]+"1"])
+
+        elif p_multop[1] == "Sskv":
+            Sskv_data.loc[wellnest] *= np.exp(np.mean(ls_sub_m[p_multop[1]+"0"]))
+            K_data.loc[wellnest] *= c
+
+    else:
+        Sskv_data.loc[wellnest] *= a
+        K_data.loc[wellnest] *= c
 
     Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
     Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
 
-    K_data.loc[wellnest] *= np.exp(ls_sub_m[p_multop[1]+"1"])
 
 # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
 # simulated groundwater in the aquifers
@@ -447,7 +520,7 @@ mode = "Pastas"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok_SUBGW//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -457,7 +530,7 @@ elif pumpexperiment == "cyclical":
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat_SUB//")
+    modelpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -473,36 +546,58 @@ node_num = 10
 # Using available heads as proxy for missing
 proxyflag = 1
 
-# Repeat interp for each well
-# pump_interp = pd.concat(
-#     [pump_interp.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+if "pump" in esmdaflag:
+    # Repeat interp for each well
+    pump_interp = pd.concat(
+        [pump_interp.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
 
 # Reorder well list to shallow to deep aquifers
 # BK, PD, NL, NB
 well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
               if y in x]
 
-# pump_interp.columns = well_names
+if "pump" in esmdaflag:
+    pump_interp.columns = well_names
+    # Calculates subsidence
+    all_results, sub_total, subv_total = bkk_sub_gw.\
+        bkk_sub.bkk_subsidence(wellnestlist,
+                               mode, tmin,
+                               tmax,
+                               Thick_data,
+                               K_data,
+                               Sskv_data,
+                               Sske_data,
+                               CC=CC,
+                               Nz=node_num,
+                               ic_run=True,
+                               proxyflag=proxyflag,
+                               pumpflag=pumpflag,
+                               pump_path=ppath,
+                               pump_sheet=psheet,
+                               pump_series=pump_interp,
+                               model_path=modelpath, califlag=0,
+                               esmdaflag=0, user_models=model_plotls)
 
-# Calculates subsidence
-all_results, sub_total, subv_total = bkk_sub_gw.\
-    bkk_sub.bkk_subsidence(wellnestlist,
-                           mode, tmin,
-                           tmax,
-                           Thick_data,
-                           K_data,
-                           Sskv_data,
-                           Sske_data,
-                           CC=CC,
-                           Nz=node_num,
-                           ic_run=True,
-                           proxyflag=proxyflag,
-                           pumpflag=pumpflag,
-                           pump_path=ppath,
-                           pump_sheet=psheet,
-                           pump_series=pumptrue,
-                           model_path=modelpath, califlag=0,
-                           esmdaflag=0, user_models=model_plotls)
+else:
+    # Calculates subsidence
+    all_results, sub_total, subv_total = bkk_sub_gw.\
+        bkk_sub.bkk_subsidence(wellnestlist,
+                               mode, tmin,
+                               tmax,
+                               Thick_data,
+                               K_data,
+                               Sskv_data,
+                               Sske_data,
+                               CC=CC,
+                               Nz=node_num,
+                               ic_run=True,
+                               proxyflag=proxyflag,
+                               pumpflag=pumpflag,
+                               pump_path=ppath,
+                               pump_sheet=psheet,
+                               pump_series=pumptrue.rename(columns={"Pump": well_name}),
+                               model_path=modelpath, califlag=0,
+                               esmdaflag=0, user_models=model_plotls)
 
 # Post process data
 sub_total, subv_total, ann_sub, \
@@ -514,9 +609,178 @@ sub_total, subv_total, ann_sub, \
 bestsubtry = ann_sub.copy()
 
 
+# # %% LS Sub
+# plt.rc("font", size=28)  # controls default text size
+# plt.rc("axes", titlesize=24)  # fontsize of the title
+# plt.rc("axes", labelsize=18)  # fontsize of the x and y labels
+# plt.rc("xtick", labelsize=16)  # fontsize of the x tick labels
+# plt.rc("ytick", labelsize=16)  # fontsize of the y tick labels
+# plt.rc("legend", fontsize=14)  # fontsize of the legend
+
+# if esmdaflag == "ls_sub":
+#     # Reading in thickness and storage data
+#     path = os.path.join(os.path.abspath("inputs"),
+#                         "SUBParametersPriortoManual.xlsx")
+#     Thick_data = pd.read_excel(path, sheet_name="Thickness",
+#                                index_col=0)  # Thickness
+#     Sskv_data = pd.read_excel(path,
+#                               sheet_name="Sskv",
+#                               index_col=0)  # Sskv
+#     Sske_data = pd.read_excel(path,
+#                               sheet_name="Sske",
+#                               index_col=0)  # Ssk
+#     K_data = pd.read_excel(path,
+#                            sheet_name="K",
+#                            index_col=0)  # K
+#     # costfc
+#     fig_name1 = "costfc.csv"
+#     full_figpath = os.path.join(modelpath, fig_name1)
+#     costfc = pd.read_csv(full_figpath, delimiter=",",
+#                          names=["Sskv", "K", "Cost"])
+#     x = np.linspace(min(costfc.iloc[:, 0]), max(costfc.iloc[:, 0]), 10)
+#     x = np.insert(x, 3, [3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95, 4.05, 4.15])
+#     y = np.linspace(min(costfc.iloc[:, 1]), max(costfc.iloc[:, 1]), 10)
+#     y = np.insert(y, 6, [4.65, 4.7, 4.75, 4.8, 4.85, 4.9, 4.95, 5, 5.05, 5.1])
+#     costfc_grid = [[], [], []]
+#     for combo in zip(list(product(x, y))):
+#         tempSskv = Sskv_data.copy()
+#         tempSske = Sske_data.copy()
+#         tempK = K_data.copy()
+
+#         tempSskv.loc[wellnestlist[0]] *= combo[0][0]
+
+#         tempSske.loc[wellnestlist[0]][::2] = tempSskv.loc[wellnestlist[0]][::2] * b
+#         tempSske.loc[wellnestlist[0]][1::2] = tempSske.loc[wellnestlist[0]][0::2] / 10
+
+#         tempK.loc[wellnestlist[0]] *= combo[0][1]
+
+#         # Calculates subsidence
+#         all_results, sub_total, subv_total = bkk_sub_gw.\
+#             bkk_sub.bkk_subsidence(wellnestlist,
+#                                    mode, tmin,
+#                                    tmax,
+#                                    Thick_data,
+#                                    tempK,
+#                                    tempSskv,
+#                                    tempSske,
+#                                    CC=CC,
+#                                    Nz=node_num,
+#                                    ic_run=True,
+#                                    proxyflag=proxyflag,
+#                                    pumpflag=pumpflag,
+#                                    pump_path=ppath,
+#                                    pump_sheet=psheet,
+#                                    pump_series=pumptrue,
+#                                    model_path=modelpath, califlag=0,
+#                                    esmdaflag=0, user_models=model_plotls)
+
+#         # Post process data
+#         sub_total, subv_total, ann_sub, \
+#             avgsub = bkk_sub_gw.bkk_sub.bkk_postproc(wellnestlist,
+#                                                      sub_total,
+#                                                      subv_total,
+#                                                      all_results)
+
+#         # preparation
+#         daterange = pd.date_range(dt.datetime(1978, 12, 31), periods=43,
+#                                   freq="Y").tolist()
+#         df = pd.DataFrame(daterange, columns=["date"])
+
+#         # annual data in cm
+#         plot_data = df.merge(ann_sub[0][1]*100, left_on=df.date,
+#                              right_on=ann_sub[0][1].index,
+#                              how="left")
+
+#         # Renaming for other merge
+#         plot_data = plot_data.rename(columns={"key_0": "key0"})
+
+#         # Filling na with 0
+#         plot_data = plot_data.fillna(0)
+
+#         # Benchamrks already in cm
+#         plot_data = plot_data.merge(sub_obs.iloc[:, -1].rename("dobs_sub"),
+#                                     left_on=plot_data.key0,
+#                                     right_on=pd.to_datetime(
+#                                         sub_obs.iloc[:, -1].index),
+#                                     how="left")
+#         # Renaming for other merge
+#         plot_data = plot_data.rename(columns={"key_0": "key1"})
+
+#         # Filling na with 0
+#         plot_data = plot_data.fillna(0)
+
+#         plot_data = plot_data.dropna()
+#         landlevel = plot_data[
+#             plot_data.columns[
+#                 plot_data.columns.str.contains(
+#                     "dobs_sub")].item()]
+
+#         # Calculating residuals
+#         # All
+#         resid_head = plot_data.AnnRates[
+#             landlevel != 0].values - sub_obs.iloc[:, -1].values
+
+#         firstterm = resid_head**2/1.5
+
+#         costfc_grid[0].append(combo[0][0])
+#         costfc_grid[1].append(combo[0][1])
+#         costfc_grid[2].append(sum(firstterm))
+
+#     fig, ax = plt.subplots()
+#     X, Y = np.meshgrid(x, y)
+#     CS = ax.contour(X, Y, np.flip(
+#         np.array(costfc_grid[2]).reshape(20, 20)),
+#         levels=[256, 60000, 120000, 240000])
+#     ax.clabel(CS, fontsize=10)
+#     ax.scatter(costfc.iloc[:, 0], costfc.iloc[:, 1], s=costfc.iloc[:, 2]/100)
+#     ax.scatter(a, c, color="cyan", s=75)
+#     ax.set_xlabel("K Multiplier")
+#     ax.set_ylabel("$S_{skv}$ Multiplier")
+
 # %%###########################################################################
 # Init run
 ###############################################################################
+
+
+def generate_pumping_ens(ann_pump, n, pumpexperiment):
+    """Generates ensemble of time series of groundwater pumping.
+
+    Input:
+    ann_pump - annual pumping rates (initial, mean) + std
+    n - number of ensemble members
+
+    Returns:
+    interp_pump - list_dates with interpolated pumping m3/day
+    """
+
+    # ann_dates has Pump2 for each t (mean) and std which will be
+    # used to generate normal dist at each t
+    # New list for all values about to be randomly chosen and
+    # interpolated
+    ann_pump.index = pd.to_datetime(ann_pump.index)
+    df = pd.DataFrame(index=ann_pump.index)
+
+    for i in range(n):
+
+        if pumpexperiment == "simpleexp":
+            x = np.linspace(0, len(ann_pump.index)-1, len(ann_pump.index))
+            y = np.ones(len(x))
+            y[0] = 1
+            y *= 50
+            y[30:50] = 125
+            y[50:] = 50
+
+
+        # Dataframe
+        mat = pd.DataFrame(y, index=ann_pump.index,
+                           columns=[i])
+        df = pd.concat([df, mat], join="outer",
+                       keys=["Date", "Date"], axis=1)
+        df.columns = df.columns.droplevel()
+        df = df.rename(columns={0: "Pump"})
+
+    return df
+
 
 # Initial ls
 # Saving variables and values
@@ -538,44 +802,65 @@ for well_i, wells in enumerate(well_names):
     well_name = wells
     #######################################################################
 
-    # Saving pumping
-    # pump_mean_init = []
-    # for pump_i in range(n_pump):
-    #     pump_mean_init.append(ls_init["pump"+str(pump_i)])
-
-    # mean_ = pd.Series(np.exp(pump_mean_init))
-    # mean_.index = annual_pump.index
-
-    # # Isolating pumping data
-    # pump_df = pd.DataFrame(mean_, index=annual_pump.index,
-    #                        columns=["0"])
-    # pump_df.index = annual_pump.index
-    # df = pd.DataFrame(index=listdaily_pump.index)
-    # df = pd.concat([df, pump_df], join="outer",
-    #                keys=["Date", "Date"], axis=1)
-    # df.columns = df.columns.droplevel()
-
-    # # Interpolating pumping data
-    # pump_interp_init = df.interpolate(method="cubic")
-    # pump_interp_init = pump_interp_init.dropna()
-    # pump_interp_init = pump_interp_init.rename(columns={"0": well_name})
     model_plot_init = besttry_Pastasmodels[well_i].copy()
-    # model_plot_init.del_stressmodel("well")  # Deletes previous pumping
-    # EstTotPump_ = ps.StressModel(pump_interp_init,
-    #                              rfunc=ps.Gamma(), name="well",
-    #                              settings="well", up=False)
-    # model_plot_init.add_stressmodel(EstTotPump_)
 
-    # Assigns parameters to previous optimal parameters and SD
-    for param_i in param_index:
+    if "pump" in esmdaflag:
+        mean_ = generate_pumping_ens(annual_pump, 1, pumpexperiment)
+        pump_mean_init = mean_.copy()
+        # Isolating pumping data
+        pump_df = pd.DataFrame(mean_, index=annual_pump.index,
+                               columns=["Pump"])
+        pump_df.index = annual_pump.index
+        df = pd.DataFrame(index=listdaily_pump.index)
+        df = pd.concat([df, pump_df], join="outer",
+                       keys=["Date", "Date"], axis=1)
+        df.columns = df.columns.droplevel()
 
-        model_plot_init.set_parameter(name=param_names[param_i],
-                                      initial=ls_init[
-                                          model_plot.parameters[
-                                              "optimal"].index[param_i]+str(well_i)],
-                                      optimal=ls_init[
-                                          model_plot.parameters[
-                                              "optimal"].index[param_i]+str(well_i)])
+        # Interpolating pumping data
+        pump_interp_init = df.interpolate(method="cubic")
+        pump_interp_init = pump_interp_init.dropna()
+        pump_interp_init = pump_interp_init.rename(columns={"0": well_name})
+        model_plot_init.del_stressmodel("well")  # Deletes previous pumping
+        EstTotPump_ = ps.StressModel(pump_interp_init,
+                                     rfunc=ps.Gamma(), name="well",
+                                     settings="well", up=False)
+        model_plot_init.add_stressmodel(EstTotPump_)
+
+    if "gw" in esmdaflag:
+        # Assigns parameters to previous optimal parameters and SD
+        for param_i, param in enumerate(param_index):
+    
+            model_plot_init.set_parameter(name=param_names[param_i],
+                                          initial=ls_init[
+                                              model_plot.parameters[
+                                                  "optimal"].index[param]+str(well_i)],
+                                          optimal=ls_init[
+                                              model_plot.parameters[
+                                                  "optimal"].index[param]+str(well_i)])
+
+    if n_param != 4:
+
+        # Other names
+        other_name = model_plot_init.parameters.index[others_i].values
+
+        for other_i, other in enumerate(other_name):
+            # Sets to optimal param
+            if other == "well_A":
+                model_plot_init.set_parameter(name=other,
+                                              initial=-1,
+                                              optimal=-1)
+            elif other == "well_n":
+                model_plot_init.set_parameter(name=other,
+                                              initial=1.2,
+                                              optimal=1.2)
+            elif other == "well_a":
+                model_plot_init.set_parameter(name=other,
+                                              initial=50,
+                                              optimal=50)
+            elif other == "constant_d":
+                model_plot_init.set_parameter(name=other,
+                                              initial=2,
+                                              optimal=2)
 
     model_lsinit.append(model_plot_init)
 
@@ -600,12 +885,22 @@ K_data = pd.read_excel(path,
 # Random multipler for each well nest
 for wellnest in wellnestlist:
 
-    Sskv_data.loc[wellnest] *= np.exp(ls_init[p_multop[1]+"0"])
+    if "sub" in esmdaflag:
+        if p_multop[1] == "SsK":
+            # Sskv_data.loc[wellnest] *= np.exp(np.mean(ls_sub_m[p_multop[1]+"0"]))
+            # K_data.loc[wellnest] *= np.exp(np.mean(ls_sub_m[p_multop[1]+"1"]))
+            Sskv_data.loc[wellnest] *= np.mean(ls_init[p_multop[1]+"0"])
+            K_data.loc[wellnest] *= np.mean(ls_init[p_multop[1]+"1"])
+
+        elif p_multop[1] == "Sskv":
+            Sskv_data.loc[wellnest] *= np.exp(np.mean(ls_init[p_multop[1]+"0"]))
+            K_data.loc[wellnest] *= c
+    else:
+        Sskv_data.loc[wellnest] *= a
+        K_data.loc[wellnest] *= c
 
     Sske_data.loc[wellnest][::2] = Sskv_data.loc[wellnest][::2] * b
     Sske_data.loc[wellnest][1::2] = Sske_data.loc[wellnest][0::2] / 10
-
-    K_data.loc[wellnest] *= np.exp(ls_init[p_multop[1]+"1"])
 
 # Mode can be "raw" as in raw groundwater data vs "Pastas" for importing Pastas
 # simulated groundwater in the aquifers
@@ -613,7 +908,7 @@ mode = "Pastas"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based//")
+    modelpath = os.path.abspath("models//bangkok_SUBGW//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -623,7 +918,7 @@ elif pumpexperiment == "cyclical":
 # Simple pump
 elif pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat_SUB//")
+    modelpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -639,36 +934,61 @@ node_num = 10
 # Using available heads as proxy for missing
 proxyflag = 1
 
-# Repeat interp for each well
-# pump_interp_init = pd.concat(
-#     [pump_interp_init.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
+if "pump" in esmdaflag:
+    # Repeat interp for each well
+    pump_interp_init = pd.concat(
+        [pump_interp_init.iloc[:, -1]]*num_wells, ignore_index=True, axis=1)
 
 # Reorder well list to shallow to deep aquifers
 # BK, PD, NL, NB
 well_names = [x for y in ["BK", "PD", "NL", "NB"] for x in well_names
               if y in x]
 
-# pump_interp_init.columns = well_names
+if "pump" in esmdaflag:
+    pump_interp_init.columns = well_names
 
-# Calculates subsidence
-all_results, sub_total, subv_total = bkk_sub_gw.\
-    bkk_sub.bkk_subsidence(wellnestlist,
-                           mode, tmin,
-                           tmax,
-                           Thick_data,
-                           K_data,
-                           Sskv_data,
-                           Sske_data,
-                           CC=CC,
-                           Nz=node_num,
-                           ic_run=True,
-                           proxyflag=proxyflag,
-                           pumpflag=pumpflag,
-                           pump_path=ppath,
-                           pump_sheet=psheet,
-                           # pump_series=pump_interp_init,
-                           model_path=modelpath, califlag=0,
-                           esmdaflag=0, user_models=model_lsinit)
+    # Calculates subsidence
+    all_results, sub_total, subv_total = bkk_sub_gw.\
+        bkk_sub.bkk_subsidence(wellnestlist,
+                               mode, tmin,
+                               tmax,
+                               Thick_data,
+                               K_data,
+                               Sskv_data,
+                               Sske_data,
+                               CC=CC,
+                               Nz=node_num,
+                               ic_run=True,
+                               proxyflag=proxyflag,
+                               pumpflag=pumpflag,
+                               pump_path=ppath,
+                               pump_sheet=psheet,
+                               pump_series=pump_interp_init,
+                               model_path=modelpath, califlag=0,
+                               esmdaflag=0, user_models=model_lsinit)
+
+else:
+    # comppump = generate_pumping_ens(listdaily_pump, 1, pumpexperiment)
+    comppump = pumptrue.copy()
+    comppump = comppump.rename(columns={"Pump": well_name})
+    # comppump.columns = well_names
+    # Calculates subsidence
+    all_results, sub_total, subv_total = bkk_sub_gw.\
+        bkk_sub.bkk_subsidence(wellnestlist,
+                               mode, tmin,
+                               tmax,
+                               Thick_data,
+                               K_data,
+                               Sskv_data,
+                               Sske_data,
+                               CC=CC,
+                               Nz=node_num,
+                               ic_run=True,
+                               proxyflag=proxyflag,
+                               pumpflag=pumpflag,
+                               pump_series=comppump,
+                               model_path=modelpath, califlag=0,
+                               esmdaflag=0, user_models=model_lsinit)
 
 # Post process data
 sub_total, subv_total, ann_sub, \
@@ -795,7 +1115,7 @@ initsubtry = ann_sub.copy()
 
 # if pumpexperiment == "pumpingcase1":
 #     # Folder to save/import graph and model
-#     modelpath = os.path.abspath("models//bangkok-based//")
+#     modelpath = os.path.abspath("models//bangkok_SUBGW//")
 
 # # Cyclical pump
 # elif pumpexperiment == "cyclical":
@@ -805,7 +1125,7 @@ initsubtry = ann_sub.copy()
 # # Simple pump
 # elif pumpexperiment == "simpleexp":
 #     # Folder to save/import graph and model
-#     modelpath = os.path.abspath("models//cowboyhat_SUB//")
+#     modelpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # # Pumping flag, for PASTAS, if changing pumping scenario
 # pumpflag = 1
@@ -1134,28 +1454,622 @@ bar_colors = ['red', 'fuchsia', 'cyan']
 bar_labels = ["Initial", "Ordinary Least Squares", "Truth"]
 fig, axs = plt.subplots(2, 3, figsize=(20, 10))
 # fig, axs = plt.subplots(2, 2, figsize=(20, 10))
-# All Pastas parameters
-if n_param == 4:
+if "gw" in esmdaflag:
+    # All Pastas parameters
+    if n_param == 4:
 
-    # Plotting only first well
-    mod_i = 0
+        # Plotting only first well
+        mod_i = 0
 
-    # For each parameter
-    for param_i in range(n_param):
+        # For each parameter
+        for param_i in range(n_param):
 
-        # A
-        if param_i == 0:
+            # A
+            if param_i == 0:
+                row = 0
+                col = 0
+                axs[row, col].set_title('A', fontsize=23, weight="bold")
+                values = [ls_init["well_A"+str(mod_i)],
+                          np.mean(ls_sub_m["well_A"+str(mod_i)]),
+                          # ls_sub30["well_A"+str(mod_i)],
+                          Atrue]
+                axs[row, col].axhline(0, color="k", linewidth=1)
+
+                axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[
+                                               np.nan, np.std(
+                                                   ls_sub_m[
+                                                       "well_A"+str(mod_i)]), np.nan],
+                                           fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i], np.nan],
+                                           fmt="o", color="k")
+                axs[row, col].set(ylabel="Value")
+                axs[row, col].annotate("(a)",
+                                       xy=(.1, 1.01), xycoords="axes fraction",
+                                       fontsize=20, horizontalalignment="right",
+                                       weight="bold",
+                                       verticalalignment="bottom")
+                truthval = Atrue
+                # mean_ = ls_sub30["well_A"+str(mod_i)]
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+            # n
+            elif param_i == 1:
+                row = 0
+                col = 1
+                axs[row, col].set_title('n', fontsize=23, weight="bold")
+                values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                          np.mean(ls_sub_m["well_n"+str(mod_i)]),
+                          # ls_sub30["well_n"+str(mod_i)],
+                          ntrue]
+                axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan, np.std(
+                                                 ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                                           fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i], np.nan],
+                                           fmt="o", color="k")
+                axs[row, col].set(ylabel="Value")
+                axs[row, col].annotate("(b)",
+                                       xy=(.1, 1.01), xycoords="axes fraction",
+                                       fontsize=20, horizontalalignment="right",
+                                       weight="bold",
+                                       verticalalignment="bottom")
+                truthval = ntrue
+                # mean_ = ls_sub30["well_n"+str(mod_i)]
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+            # a
+            elif param_i == 2:
+                row = 1
+                col = 0
+                axs[row, col].set_title('a', fontsize=23, weight="bold")
+                values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                          np.mean(ls_sub_m["well_a"+str(mod_i)]),
+                          # ls_sub30["well_a"+str(mod_i)],
+                          atrue]
+                axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan,
+                                                 np.std(ls_sub_m["well_a"+str(mod_i)]),
+                                                 np.nan],
+                                           fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i], np.nan],
+                                           fmt="o", color="k")
+                axs[row, col].set(ylabel="Value")
+                axs[row, col].annotate("(d)",
+                                       xy=(.1, 1.01), xycoords="axes fraction",
+                                       fontsize=20, horizontalalignment="right",
+                                       weight="bold",
+                                       verticalalignment="bottom")
+                truthval = atrue
+                # Print percent error
+                # mean_ = ls_sub30["well_a"+str(mod_i)]
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+            # d
+            else:
+                row = 1
+                col = 1
+                axs[row, col].set_title('d', fontsize=23, weight="bold")
+                values = [np.mean(ls_init["constant_d"+str(mod_i)]),
+                          np.mean(ls_sub_m["constant_d"+str(mod_i)]),
+                          # ls_sub30["constant_d"+str(mod_i)],
+                          dtrue]
+                axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[
+                                               np.nan, np.std(
+                                                   ls_sub_m[
+                                                       "constant_d"+str(mod_i)]), np.nan],
+                                           fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[row, col].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i], np.nan],
+                                           fmt="o", color="k")
+                axs[row, col].axhline(0, color="k", linewidth=1)
+                axs[row, col].set(ylabel="Value")
+                axs[row, col].annotate("(e)",
+                                       xy=(.1, 1.01), xycoords="axes fraction",
+                                       fontsize=20, horizontalalignment="right",
+                                       weight="bold",
+                                       verticalalignment="bottom")
+                truthval = dtrue
+                # Print percent error
+                # mean_ = ls_sub30["constant_d"+str(mod_i)]
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+    # 3 Pastas parameters
+    if n_param == 3:
+
+        # Plotting only first well
+        mod_i = 0
+
+        # For each parameter
+        for param_i in range(n_param):
+
+            # A
+            if np.logical_and(0 in param_index, 3 in param_index):
+                if param_i == 0:
+                    row = 0
+                    col = 0
+
+                    axs[row, col].set_title('A', fontsize=23, weight="bold")
+                    values = [ls_init["well_A"+str(mod_i)],
+                              np.mean(ls_sub_m["well_A"+str(mod_i)]),
+                              # ls_sub30["well_A"+str(mod_i)],
+                              Atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                   ls_sub_m["well_A"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(a)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = Atrue
+                    # mean_ = ls_sub30["well_A"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+                # n
+                elif param_i == 1:
+                    # row = 0
+                    # col = 1
+                    # axs[row, col].set_title('n', fontsize=23, weight="bold")
+                    # values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                    #           np.mean(ls_sub_m["well_n"+str(mod_i)]),
+                    #           # ls_sub30["well_n"+str(mod_i)],
+                    #           ntrue]
+                    # axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    # if errorbar_nens:
+                    #     axs[row, col].errorbar(labels, values,
+                    #                            yerr=[np.nan, np.std(
+                    #                                ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                    #                            fmt="o", color="k")
+                    # elif errorbar_ls:
+                    #     axs[row, col].errorbar(labels, values,
+                    #                            yerr=[np.nan, ls_error[param_i], np.nan],
+                    #                            fmt="o", color="k")
+                    # axs[row, col].set(ylabel="Value")
+                    # axs[row, col].annotate("(b)",
+                    #                        xy=(.1, 1.01), xycoords="axes fraction",
+                    #                        fontsize=20, horizontalalignment="right",
+                    #                        weight="bold",
+                    #                        verticalalignment="bottom")
+                    # truthval = ntrue
+                    # # mean_ = ls_sub30["well_n"+str(mod_i)]
+                    # # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # # print(mean_, truthval)
+                    # # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+                    row = 1
+                    col = 0
+                    axs[row, col].set_title('a', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_a"+str(mod_i)]),
+                              # ls_sub30["well_a"+str(mod_i)],
+                              atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan,
+                                                     np.std(ls_sub_m[
+                                                         "well_a"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(d)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = atrue
+                    # Print percent error
+                    # mean_ = ls_sub30["well_a"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+                # a
+                elif param_i == 2:
+                    row = 1
+                    col = 1
+                    axs[row, col].set_title('d', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["constant_d"+str(mod_i)]),
+                              np.mean(ls_sub_m["constant_d"+str(mod_i)]),
+                              # ls_sub30["constant_d"+str(mod_i)],
+                              dtrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(ls_sub_m["constant_d"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].axhline(0, color="k", linewidth=1)
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(e)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = dtrue
+                    # Print percent error
+                    # mean_ = ls_sub30["constant_d"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+            # A
+            elif 0 in param_index:
+
+                if param_i == 0:
+                    row = 0
+                    col = 0
+
+                    axs[row, col].set_title('A', fontsize=23, weight="bold")
+                    values = [ls_init["well_A"+str(mod_i)],
+                              np.mean(ls_sub_m["well_A"+str(mod_i)]),
+                              # ls_sub30["well_A"+str(mod_i)],
+                              Atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                   ls_sub_m["well_A"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(a)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = Atrue
+                    # mean_ = ls_sub30["well_A"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+                # n
+                elif param_i == 1:
+                    row = 0
+                    col = 1
+                    axs[row, col].set_title('n', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_n"+str(mod_i)]),
+                              # ls_sub30["well_n"+str(mod_i)],
+                              ntrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                   ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(b)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = ntrue
+                    # mean_ = ls_sub30["well_n"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+    
+                # a
+                elif param_i == 2:
+                    row = 1
+                    col = 0
+                    axs[row, col].set_title('a', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_a"+str(mod_i)]),
+                              # ls_sub30["well_a"+str(mod_i)],
+                              atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan,
+                                                     np.std(ls_sub_m[
+                                                         "well_a"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(d)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = atrue
+                    # Print percent error
+                    # mean_ = ls_sub30["well_a"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+            # A
+            elif 3 in param_index:
+                # n
+                if param_i == 0:
+                    row = 0
+                    col = 1
+                    axs[row, col].set_title('n', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_n"+str(mod_i)]),
+                              # ls_sub30["well_n"+str(mod_i)],
+                              ntrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                   ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(b)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = ntrue
+                    # mean_ = ls_sub30["well_n"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+    
+                # a
+                elif param_i == 1:
+                    row = 1
+                    col = 0
+                    axs[row, col].set_title('a', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_a"+str(mod_i)]),
+                              # ls_sub30["well_a"+str(mod_i)],
+                              atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan,
+                                                     np.std(ls_sub_m[
+                                                         "well_a"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(d)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = atrue
+                    # Print percent error
+                    # mean_ = ls_sub30["well_a"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+                # d
+                elif param_i == 2:
+                    row = 1
+                    col = 1
+                    axs[row, col].set_title('d', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["constant_d"+str(mod_i)]),
+                              np.mean(ls_sub_m["constant_d"+str(mod_i)]),
+                              # ls_sub30["constant_d"+str(mod_i)],
+                              dtrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(ls_sub_m["constant_d"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].axhline(0, color="k", linewidth=1)
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(e)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = dtrue
+                    # Print percent error
+                    # mean_ = ls_sub30["constant_d"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+    # 3 Pastas parameters
+    if n_param == 2:
+
+        # Plotting only first well
+        mod_i = 0
+
+        # For each parameter
+        for param_i in range(n_param):
+
+            # A
+            if 0 in param_index:
+                if param_i == 0:
+                    row = 0
+                    col = 0
+                    axs[row, col].set_title('A', fontsize=23, weight="bold")
+                    values = [ls_init["well_A"+str(mod_i)],
+                              np.mean(ls_sub_m["well_A"+str(mod_i)]),
+                              # ls_sub30["well_A"+str(mod_i)],
+                              Atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(a)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = Atrue
+                    # mean_ = ls_sub30["well_A"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+                # d
+                elif param_i == 1:
+                    row = 1
+                    col = 1
+                    axs[row, col].set_title('d', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["constant_d"+str(mod_i)]),
+                              np.mean(ls_sub_m["constant_d"+str(mod_i)]),
+                              # ls_sub30["constant_d"+str(mod_i)],
+                              dtrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(ls_sub_m["constant_d"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].axhline(0, color="k", linewidth=1)
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(e)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = dtrue
+                    # Print percent error
+                    # mean_ = ls_sub30["constant_d"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+
+            else:
+                # n
+                if param_i == 0:
+                    row = 0
+                    col = 1
+                    axs[row, col].set_title('n', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_n"+str(mod_i)]),
+                              # ls_sub30["well_n"+str(mod_i)],
+                              ntrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                     ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(b)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = ntrue
+                    # mean_ = ls_sub30["well_n"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+    
+                # a
+                elif param_i == 1:
+                    row = 1
+                    col = 0
+                    axs[row, col].set_title('a', fontsize=23, weight="bold")
+                    values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                              np.mean(ls_sub_m["well_a"+str(mod_i)]),
+                              # ls_sub30["well_a"+str(mod_i)],
+                              atrue]
+                    axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
+                    if errorbar_nens:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, np.std(
+                                                   ls_sub_m["well_a"+str(mod_i)]), np.nan],
+                                               fmt="o", color="k")
+                    elif errorbar_ls:
+                        axs[row, col].errorbar(labels, values,
+                                               yerr=[np.nan, ls_error[param_i], np.nan],
+                                               fmt="o", color="k")
+                    axs[row, col].set(ylabel="Value")
+                    axs[row, col].annotate("(d)",
+                                           xy=(.1, 1.01), xycoords="axes fraction",
+                                           fontsize=20, horizontalalignment="right",
+                                           weight="bold",
+                                           verticalalignment="bottom")
+                    truthval = atrue
+                    # Print percent error
+                    # mean_ = ls_sub30["well_a"+str(mod_i)]
+                    # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                    # print(mean_, truthval)
+                    # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+    elif n_param == 1:
+
+        if 0 in param_index:
+
             row = 0
             col = 0
             axs[row, col].set_title('A', fontsize=23, weight="bold")
             values = [ls_init["well_A"+str(mod_i)],
-                      ls_sub_m["well_A"+str(mod_i)],
+                      np.mean(ls_sub_m["well_A"+str(mod_i)]),
                       # ls_sub30["well_A"+str(mod_i)],
                       Atrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[row, col].errorbar(labels, values,
-                                   yerr=[np.nan, ls_error[param_i], np.nan],
-                                   fmt="o", color="k")
+            if errorbar_ls:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, ls_error[param_i], np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(a)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1168,19 +2082,25 @@ if n_param == 4:
             # print(mean_, truthval)
             # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
 
-        # n
-        elif param_i == 1:
+        elif 1 in param_index:
+
             row = 0
             col = 1
             axs[row, col].set_title('n', fontsize=23, weight="bold")
-            values = [ls_init["well_n"+str(mod_i)],
-                      ls_sub_m["well_n"+str(mod_i)],
+            values = [np.mean(ls_init["well_n"+str(mod_i)]),
+                      np.mean(ls_sub_m["well_n"+str(mod_i)]),
                       # ls_sub30["well_n"+str(mod_i)],
                       ntrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[row, col].errorbar(labels, values,
-                                   yerr=[np.nan, ls_error[param_i], np.nan],
-                                   fmt="o", color="k")
+            if errorbar_nens:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, np.std(
+                                             ls_sub_m["well_n"+str(mod_i)]), np.nan],
+                                       fmt="o", color="k")
+            elif errorbar_ls:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, ls_error[param_i], np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(b)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1192,20 +2112,25 @@ if n_param == 4:
             # percerr = abs(abs(mean_ - truthval)/truthval) * 100
             # print(mean_, truthval)
             # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+        elif 2 in param_index:
 
-        # a
-        elif param_i == 2:
             row = 1
             col = 0
             axs[row, col].set_title('a', fontsize=23, weight="bold")
-            values = [ls_init["well_a"+str(mod_i)],
-                      ls_sub_m["well_a"+str(mod_i)],
+            values = [np.mean(ls_init["well_a"+str(mod_i)]),
+                      np.mean(ls_sub_m["well_a"+str(mod_i)]),
                       # ls_sub30["well_a"+str(mod_i)],
                       atrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[row, col].errorbar(labels, values,
-                                   yerr=[np.nan, ls_error[param_i], np.nan],
-                                   fmt="o", color="k")
+            if errorbar_nens:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, np.std(
+                                           ls_sub_m["well_a"+str(mod_i)]), np.nan],
+                                       fmt="o", color="k")
+            elif errorbar_ls:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, ls_error[param_i], np.nan],
+                                       fmt="o", color="k")
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(d)",
                                    xy=(.1, 1.01), xycoords="axes fraction",
@@ -1218,20 +2143,19 @@ if n_param == 4:
             # percerr = abs(abs(mean_ - truthval)/truthval) * 100
             # print(mean_, truthval)
             # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
-
-        # d
         else:
             row = 1
             col = 1
             axs[row, col].set_title('d', fontsize=23, weight="bold")
-            values = [ls_init["constant_d"+str(mod_i)],
-                      ls_sub_m["constant_d"+str(mod_i)],
+            values = [np.mean(ls_init["constant_d"+str(mod_i)]),
+                      np.mean(ls_sub_m["constant_d"+str(mod_i)]),
                       # ls_sub30["constant_d"+str(mod_i)],
                       dtrue]
             axs[row, col].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[row, col].errorbar(labels, values,
-                                   yerr=[np.nan, ls_error[param_i], np.nan],
-                                   fmt="o", color="k")
+            if errorbar_nens:
+                axs[row, col].errorbar(labels, values,
+                                       yerr=[np.nan, np.std(ls_sub_m["constant_d"+str(mod_i)]), np.nan],
+                                       fmt="o", color="k")
             axs[row, col].axhline(0, color="k", linewidth=1)
             axs[row, col].set(ylabel="Value")
             axs[row, col].annotate("(e)",
@@ -1246,72 +2170,124 @@ if n_param == 4:
             # print(mean_, truthval)
             # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
 
-# For each sub param
-for param_i in range(n_sub):
 
-    # Truth val, title, save title
-    if p_multop[1] == "Sskv" or p_multop[1] == "SsK":
+if "sub" in esmdaflag:
+    # For each sub param
+    for param_i in range(n_sub):
 
-        # Sskv
-        if param_i == 0:
+        # Truth val, title, save title
+        if p_multop[1] == "Sskv" or p_multop[1] == "SsK":
 
-            # plt.title('Sskv', fontsize=14)
-            truthval = a
-            axs[param_i, 2].set_title(
-                'S$_{skv}$ Multiplier', fontsize=23, weight="bold")
-            values = [np.exp(ls_init["SsK0"]),
-                      np.exp(ls_sub_m["SsK0"]),
-                      # np.exp(ls_sub30["SsK0"]),
-                      truthval]
-            axs[param_i, 2].axhline(0, color="k", linewidth=1)
-            axs[param_i, 2].set(ylabel="Value")
-            axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[param_i, 2].errorbar(labels, values,
-                                     yerr=[np.nan, ls_error[param_i], np.nan],
-                                     fmt="o", color="k")
-            axs[param_i, 2].annotate("(c)",
-                                     xy=(.1, 1.01), xycoords="axes fraction",
-                                     fontsize=20, horizontalalignment="right",
-                                     weight="bold",
-                                     verticalalignment="bottom")
-            axs[param_i, 2].annotate(f'{np.exp(ls_init["SsK0"]):.2f}',
-                                     (0.07, 0.05), xycoords='axes fraction',
-                                     fontsize=22)
-            # mean_ = np.exp(ls_sub30["SsK0"])
-            # percerr = abs(abs(mean_ - truthval)/truthval) * 100
-            # print(mean_, truthval)
-            # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+            # Sskv
+            if param_i == 0:
 
-        # Sske
-        elif param_i == 1:
-            # plt.suptitle("ESMDA: LOG K Parameters for Well")
+                # plt.title('Sskv', fontsize=14)
+                truthval = a
+                axs[param_i, 2].set_title(
+                    'S$_{skv}$ Multiplier', fontsize=23, weight="bold")
+                values = [ls_init[p_multop[1] + "0"],
+                          np.mean(ls_sub_m[p_multop[1] + "0"]),
+                          # np.exp(ls_sub30[p_multop[1] + "0"]),
+                          # np.log(truthval)]
+                          truthval]
+                axs[param_i, 2].axhline(0, color="k", linewidth=1)
+                axs[param_i, 2].set(ylabel="Value")
+                axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[param_i, 2].errorbar(labels, values,
+                                             yerr=[np.nan, np.std(ls_sub_m[p_multop[1] + "0"]), np.nan],
+                                             fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[param_i, 2].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i+n_param], np.nan],
+                                           fmt="o", color="k")
+                axs[param_i, 2].annotate("(c)",
+                                         xy=(.1, 1.01), xycoords="axes fraction",
+                                         fontsize=20, horizontalalignment="right",
+                                         weight="bold",
+                                         verticalalignment="bottom")
+                # axs[param_i, 2].annotate(f'{np.exp(ls_init[p_multop[1] + "0"]):.2f}',
+                #                          (0.07, 0.05), xycoords='axes fraction',
+                #                          fontsize=22)
+                # mean_ = np.exp(ls_sub30[p_multop[1] + "0"])
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
 
-            # plt.title('K', fontsize=14)
-            truthval = c
-            axs[param_i, 2].set_title('K Multiplier', fontsize=23, weight="bold")
+            # Sske
+            elif param_i == 1:
+                # plt.suptitle("ESMDA: LOG K Parameters for Well")
 
-            values = [np.exp(ls_init["SsK1"]),
-                      np.exp(ls_sub_m["SsK1"]),
-                      # np.exp(ls_sub30["SsK1"]),
-                      truthval]
-            axs[param_i, 2].set(ylabel="Value")
-            bars = axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
-            axs[param_i, 2].errorbar(labels, values,
-                                     yerr=[np.nan, ls_error[param_i], np.nan],
-                                     fmt="o", color="k")
+                # plt.title('K', fontsize=14)
+                truthval = c
+                axs[param_i, 2].set_title('K Multiplier', fontsize=23, weight="bold")
 
-            # axs[param_i, 2].annotate(f'{np.exp(ls_sub30["SsK1"]):.2f}',
-            #                          (0.54, 0.05), xycoords='axes fraction',
-            #                          fontsize=22)
-            axs[param_i, 2].annotate("(f)",
-                                     xy=(.1, 1.01), xycoords="axes fraction",
-                                     fontsize=20, horizontalalignment="right",
-                                     weight="bold",
-                                     verticalalignment="bottom")
-            # mean_ = np.exp(ls_sub30["SsK1"])
-            # percerr = abs(abs(mean_ - truthval)/truthval) * 100
-            # print(mean_, truthval)
-            # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+                values = [ls_init["SsK1"],
+                          np.mean(ls_sub_m["SsK1"]),
+                          # np.exp(ls_sub30["SsK1"]),
+                          # np.log(truthval)]
+                          truthval]
+                axs[param_i, 2].set(ylabel="Value")
+                axs[param_i, 2].axhline(0, color="k", linewidth=1)
+                bars = axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[param_i, 2].errorbar(labels, values,
+                                             yerr=[np.nan, np.std(ls_sub_m["SsK1"]), np.nan],
+                                             fmt="o", color="k")
+
+                elif errorbar_ls:
+                    axs[param_i, 2].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i+n_param], np.nan],
+                                           fmt="o", color="k")
+                # axs[param_i, 2].annotate(f'{np.exp(ls_sub30["SsK1"]):.2f}',
+                #                          (0.54, 0.05), xycoords='axes fraction',
+                #                          fontsize=22)
+                axs[param_i, 2].annotate("(f)",
+                                         xy=(.1, 1.01), xycoords="axes fraction",
+                                         fontsize=20, horizontalalignment="right",
+                                         weight="bold",
+                                         verticalalignment="bottom")
+                # mean_ = np.exp(ls_sub30["SsK1"])
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
+        # Truth val, title, save title
+        elif p_multop[1] == "K":
+            # Sskv
+            if param_i == 0:
+
+                # plt.title('Sskv', fontsize=14)
+                truthval = a
+                axs[param_i, 2].set_title(
+                    'K Multiplier', fontsize=23, weight="bold")
+                values = [ls_init[p_multop[1] + "0"],
+                          np.mean(ls_sub_m[p_multop[1] + "0"]),
+                          # np.exp(ls_sub30[p_multop[1] + "0"]),
+                          # np.log(truthval)]
+                          truthval]
+                axs[param_i, 2].axhline(0, color="k", linewidth=1)
+                axs[param_i, 2].set(ylabel="Value")
+                axs[param_i, 2].bar(labels, values, label=bar_labels, color=bar_colors)
+                if errorbar_nens:
+                    axs[param_i, 2].errorbar(labels, values,
+                                             yerr=[np.nan, np.std(ls_sub_m[p_multop[1] + "0"]), np.nan],
+                                             fmt="o", color="k")
+                elif errorbar_ls:
+                    axs[param_i, 2].errorbar(labels, values,
+                                           yerr=[np.nan, ls_error[param_i], np.nan],
+                                           fmt="o", color="k")
+                axs[param_i, 2].annotate("(c)",
+                                         xy=(.1, 1.01), xycoords="axes fraction",
+                                         fontsize=20, horizontalalignment="right",
+                                         weight="bold",
+                                         verticalalignment="bottom")
+                # axs[param_i, 2].annotate(f'{np.exp(ls_init[p_multop[1] + "0"]):.2f}',
+                #                          (0.07, 0.05), xycoords='axes fraction',
+                #                          fontsize=22)
+                # mean_ = np.exp(ls_sub30[p_multop[1] + "0"])
+                # percerr = abs(abs(mean_ - truthval)/truthval) * 100
+                # print(mean_, truthval)
+                # print("Param " + str(param_i) + ": " + f'{percerr:.2f}')
 
 plt.show()
 plt.subplots_adjust(top=0.99, bottom=0.01, hspace=.5)
@@ -1325,280 +2301,292 @@ plt.savefig(full_figpath, bbox_inches="tight", format="png")
 full_figpath = os.path.join(figpath, fig_name2)
 plt.savefig(full_figpath, bbox_inches="tight", format="eps")
 
+if "sub" in esmdaflag:
+    # Plotting observations with simulation
+    # SUBSIDNECE
+    plt.figure(figsize=(10, 4))
+    color = cm.YlOrBr(np.linspace(0, 1, ne))
 
-# Plotting observations with simulation
-# SUBSIDNECE
-plt.figure(figsize=(10, 4))
-color = cm.YlOrBr(np.linspace(0, 1, ne))
+    obs_index = gw_obs_indices[0]
 
-obs_index = gw_obs_indices[0]
+    # plt.plot(obs_index,
+    #          -sub_obs.iloc[:, 1], "-ok", label="Observations", zorder=10)
+    # plt.plot(obs_index,
+    #          -truth[0].dropna().loc[obs_index].iloc[:, -1], "-c", label="Truth", linewidth=5)
+    # plt.plot(bestsubtry[0][1].iloc[:, 2][index].index,
+    #          -bestsubtry[0][1].iloc[:, 2][index]*100, "--", color="fuchsia",
+    #          label="Ordinary Least Squares", linewidth=6)
+    # plt.plot(bestsubtry30[0][1].iloc[:, 2][index].index,
+    #          -bestsubtry30[0][1].iloc[:, 2][index]*100, "--", color="blue",
+    #          label="Regularized Least Squares", linewidth=6)
 
-# plt.plot(obs_index,
-#          -sub_obs.iloc[:, 1], "-ok", label="Observations", zorder=10)
-# plt.plot(obs_index,
-#          -truth[0].dropna().loc[obs_index].iloc[:, -1], "-c", label="Truth", linewidth=5)
-# plt.plot(bestsubtry[0][1].iloc[:, 2][index].index,
-#          -bestsubtry[0][1].iloc[:, 2][index]*100, "--", color="fuchsia",
-#          label="Ordinary Least Squares", linewidth=6)
-# plt.plot(bestsubtry30[0][1].iloc[:, 2][index].index,
-#          -bestsubtry30[0][1].iloc[:, 2][index]*100, "--", color="blue",
-#          label="Regularized Least Squares", linewidth=6)
-
-# plt.ylabel("Rates\n(cm/yr)")
-# plt.legend()
-# fig_name1 = Wellnest_name[0] + "Sub_ESMDA_evol.png"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="png")
+    # plt.ylabel("Rates\n(cm/yr)")
+    # plt.legend()
+    # fig_name1 = Wellnest_name[0] + "Sub_ESMDA_evol.png"
+    # full_figpath = os.path.join(figpath, fig_name1)
+    # plt.savefig(full_figpath, bbox_inches="tight", format="png")
 
 
 # %% Pumping during obs
 
-# fig, axs = plt.subplots(1, 1, figsize=(16, 5))
+if "pump" in esmdaflag:
+    fig, axs = plt.subplots(1, 1, figsize=(16, 5))
 
-# # Pumping subset
-# obs_index = gw_obs_indices[1]
-# pump_index = pumptrue[
-#     np.logical_and(
-#         pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])]
-# pump_indices = np.logical_and(
-#     pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])
+    # Pumping subset
+    obs_index = gw_obs_indices[1]
+    pump_index = pumptrue[
+        np.logical_and(
+            pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])]
+    pump_indices = np.logical_and(
+        pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])
 
-# pump_index2 = annual_pump[
-#     np.logical_and(
-#         annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
-# pump_indices2 = np.logical_and(
-#     annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
+    pump_index2 = annual_pump[
+        np.logical_and(
+            annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
+    pump_indices2 = np.logical_and(
+        annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
 
-# axs.plot(pump_index.index, pumptrue[pump_indices].iloc[:, -1],
-#          color="c", linewidth=4,
-#          marker="o")
-# axs.plot(pump_index2.index,
-#          list(compress(np.exp(pump_mean), pump_indices2)), color="fuchsia",
-#          alpha=1, linewidth=4,
-#          linestyle="--")
-# # axs.plot(pump_index2.index,
-# #          list(compress(np.exp(pump_mean30), pump_indices2)), color="blue",
-# #          alpha=1, linewidth=4,
-# #          linestyle="-")
-# axs.plot(pump_index2.index,
-#          list(compress(np.exp(pump_mean_init), pump_indices2)), color="red",
-#          alpha=.3, linewidth=4,
-#          linestyle="-")
-# axs.set_ylabel("Pumping Rate * 10$^4$ (m$^3$/day)")
-# axs.set_xlabel("Date")
+    axs.plot(pump_index.index, pumptrue[pump_indices].iloc[:, -1],
+             color="c", linewidth=4,
+             marker="o")
+    axs.plot(pump_index2.index,
+             list(compress(np.exp(pump_mean), pump_indices2)), color="fuchsia",
+             alpha=1, linewidth=4,
+             linestyle="--")
+    # axs.plot(pump_index2.index,
+    #          list(compress(np.exp(pump_mean30), pump_indices2)), color="blue",
+    #          alpha=1, linewidth=4,
+    #          linestyle="-")
+    axs.plot(pump_index2.index,
+             pump_mean_init.iloc[pump_indices2, 0], color="red",
+             alpha=.3, linewidth=4,
+             linestyle="-")
+    axs.set_ylabel("Pumping Rate * 10$^4$ (m$^3$/day)")
+    axs.set_xlabel("Date")
 
-# # access legend objects automatically created from data
-# handles, labels = axs.get_legend_handles_labels()
+    # access legend objects automatically created from data
+    handles, labels = axs.get_legend_handles_labels()
 
-# # Adding lines for ensemble members
-# linetruth = Line2D([0], [0], label='Truth', color='c',
-#                    alpha=1, linewidth=4, marker='o')
-# linepriormean = Line2D([0], [0], label='Initial', color='red',
-#                        alpha=1, linewidth=4, marker='o')
-# lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
-#                    alpha=1, linewidth=4, linestyle="--")
-# lineleast30 = Line2D([0], [0], label='Regularized Least Squares', color='blue',
-#                      alpha=1, linewidth=4, linestyle="-")
+    # Adding lines for ensemble members
+    linetruth = Line2D([0], [0], label='Truth', color='c',
+                       alpha=1, linewidth=4, marker='o')
+    linepriormean = Line2D([0], [0], label='Initial', color='red',
+                           alpha=1, linewidth=4, marker='o')
+    lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
+                       alpha=1, linewidth=4, linestyle="--")
+    lineleast30 = Line2D([0], [0], label='Regularized Least Squares', color='blue',
+                         alpha=1, linewidth=4, linestyle="-")
 
-# # plt.ylim([-30, 0])
-# # add manual symbols to auto legend
-# handles.extend([linepriormean, lineleast, lineleast30, linetruth])
+    # plt.ylim([-30, 0])
+    # add manual symbols to auto legend
+    handles.extend([linepriormean, lineleast, lineleast30, linetruth])
 
-# axs.legend(handles=handles)
-# fig.set_rasterized(True)
+    axs.legend(handles=handles)
+    fig.set_rasterized(True)
 
-# # Saving
-# fig_name1 = wellnestlist[0] + "_ObsPumping_ESMDA_Paper.png"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="png")
+    # Saving
+    fig_name1 = wellnestlist[0] + "_ObsPumping_ESMDA_Paper.png"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="png")
 
-# fig_name1 = wellnestlist[0] + "_ObsPumping_ESMDA_Paper.eps"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="eps")
+    fig_name1 = wellnestlist[0] + "_ObsPumping_ESMDA_Paper.eps"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="eps")
 
-# # %%###########################################################################
-# # Plotting settings
-# ###############################################################################
+    # %%###########################################################################
+    # Plotting settings
+    ###############################################################################
 
-# plt.rc("font", size=28)  # controls default text size
-# plt.rc("axes", titlesize=24)  # fontsize of the title
-# plt.rc("axes", labelsize=18)  # fontsize of the x and y labels
-# plt.rc("xtick", labelsize=16)  # fontsize of the x tick labels
-# plt.rc("ytick", labelsize=16)  # fontsize of the y tick labels
-# plt.rc("legend", fontsize=14)  # fontsize of the legend
+    plt.rc("font", size=28)  # controls default text size
+    plt.rc("axes", titlesize=24)  # fontsize of the title
+    plt.rc("axes", labelsize=18)  # fontsize of the x and y labels
+    plt.rc("xtick", labelsize=16)  # fontsize of the x tick labels
+    plt.rc("ytick", labelsize=16)  # fontsize of the y tick labels
+    plt.rc("legend", fontsize=14)  # fontsize of the legend
 
+    # %% Pumping during obs
 
-# # %% Pumping during obs
+    fig, axs = plt.subplots(1, 1, figsize=(16, 5))
 
-# fig, axs = plt.subplots(1, 1, figsize=(16, 5))
+    # Pumping subset
+    obs_index = gw_obs_indices[1]
+    pump_index = pumptrue[
+        np.logical_and(
+            pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])]
+    pump_indices = np.logical_and(
+        pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])
 
-# # Pumping subset
-# obs_index = gw_obs_indices[1]
-# pump_index = pumptrue[
-#     np.logical_and(
-#         pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])]
-# pump_indices = np.logical_and(
-#     pumptrue.index >= obs_index[0], pumptrue.index <= obs_index.iloc[-1])
+    pump_index2 = annual_pump[
+        np.logical_and(
+            annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
+    pump_indices2 = np.logical_and(
+        annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
 
-# pump_index2 = annual_pump[
-#     np.logical_and(
-#         annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
-# pump_indices2 = np.logical_and(
-#     annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
+    axs.plot(pump_index.index, +(Atrue)*pumptrue[pump_indices].iloc[:, -1],
+             color="c", linewidth=4,
+             marker="o")
 
-# axs.plot(pump_index.index, -dtrue+(-Atrue)*pumptrue[pump_indices].iloc[:, -1],
-#          color="c", linewidth=4,
-#          marker="o")
+    # A and d least squares
+    # Als = -1
+    Als = np.mean(ls_sub_m[
+        model_plot.parameters[
+            "optimal"].index[0]+str(well_i)])
+    # dls = 2
+    dls = np.mean(ls_sub_m[
+        model_plot.parameters[
+            "optimal"].index[3]+str(well_i)])
 
-# # A and d least squares
-# Als = -ls_sub_m[
-#     model_plot.parameters[
-#         "optimal"].index[0]+str(well_i)]
-# dls = ls_sub_m[
-#     model_plot.parameters[
-#         "optimal"].index[3]+str(well_i)]
+    # A and d initial
+    # Als_init = -1
+    Als_init = ls_init[
+        model_plot.parameters[
+            "optimal"].index[0]+str(well_i)]
+    dls_init = 2
+    # dls_init = ls_init[
+    #     model_plot.parameters[
+    #         "optimal"].index[3]+str(well_i)]
 
-# # A and d initial
-# Als_init = -ls_init[
-#     model_plot.parameters[
-#         "optimal"].index[0]+str(well_i)]
-# dls_init = ls_init[
-#     model_plot.parameters[
-#         "optimal"].index[3]+str(well_i)]
+    # A and d regularized least squares
+    # Als30 = -ls_sub30[
+    #     model_plot.parameters[
+    #         "optimal"].index[0]+str(well_i)]
+    # dls30 = ls_sub30[
+    #     model_plot.parameters[
+    #         "optimal"].index[3]+str(well_i)]
 
-# # A and d regularized least squares
-# # Als30 = -ls_sub30[
-# #     model_plot.parameters[
-# #         "optimal"].index[0]+str(well_i)]
-# # dls30 = ls_sub30[
-# #     model_plot.parameters[
-# #         "optimal"].index[3]+str(well_i)]
+    # Plotting
+    axs.plot(pump_index2.index,
+             +Als*pd.Series(list(compress(
+                 np.exp(pump_mean), pump_indices2))), color="fuchsia",
+             alpha=1, linewidth=4,
+             linestyle="--")
+    axs.fill_between(pump_index2.index,
+                        +Als*pd.Series(list(compress(
+                            np.exp(pump_mean), pump_indices2))) - \
+                            pd.Series(list(compress(
+                                pump_std, pump_indices2))),
+                     +Als*pd.Series(list(compress(
+                         np.exp(pump_mean), pump_indices2))) + \
+                         pd.Series(list(compress(
+                             pump_std, pump_indices2))))
+    # axs.plot(pump_index2.index,
+    #          -dls30+Als30*pd.Series(list(compress(
+    #              np.exp(pump_mean30), pump_indices2))), color="blue",
+    #          alpha=1, linewidth=4,
+    #          linestyle="-")
+    axs.plot(pump_index2.index,
+             +Als_init*pump_mean_init.iloc[pump_indices2, 0], color="red",
+             alpha=.3, linewidth=4,
+             linestyle="-")
+    axs.set_ylabel("A*Pump [m]")
+    axs.set_xlabel("Date")
 
-# # Plotting
-# axs.plot(pump_index2.index,
-#          -dls+Als*pd.Series(list(compress(
-#              np.exp(pump_mean), pump_indices2))), color="fuchsia",
-#          alpha=1, linewidth=4,
-#          linestyle="--")
-# # axs.plot(pump_index2.index,
-# #          -dls30+Als30*pd.Series(list(compress(
-# #              np.exp(pump_mean30), pump_indices2))), color="blue",
-# #          alpha=1, linewidth=4,
-# #          linestyle="-")
-# axs.plot(pump_index2.index,
-#          -dls_init+Als_init*pd.Series(list(compress(
-#              np.exp(pump_mean_init), pump_indices2))), color="red",
-#          alpha=.3, linewidth=4,
-#          linestyle="-")
-# axs.set_ylabel("A*Pump-d [m]")
-# axs.set_xlabel("Date")
+    # access legend objects automatically created from data
+    handles, labels = axs.get_legend_handles_labels()
 
-# # access legend objects automatically created from data
-# handles, labels = axs.get_legend_handles_labels()
+    # Adding lines for ensemble members
+    linetruth = Line2D([0], [0], label='Truth', color='c',
+                       alpha=1, linewidth=4, marker='o')
+    linepriormean = Line2D([0], [0], label='Initial', color='red',
+                           alpha=1, linewidth=4, marker='o')
+    lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
+                       alpha=1, linewidth=4, linestyle="--")
+    lineleast30 = Line2D([0], [0], label='Regularized Least Squares', color='blue',
+                         alpha=1, linewidth=4, linestyle="-")
 
-# # Adding lines for ensemble members
-# linetruth = Line2D([0], [0], label='Truth', color='c',
-#                    alpha=1, linewidth=4, marker='o')
-# linepriormean = Line2D([0], [0], label='Initial', color='red',
-#                        alpha=1, linewidth=4, marker='o')
-# lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
-#                    alpha=1, linewidth=4, linestyle="--")
-# lineleast30 = Line2D([0], [0], label='Regularized Least Squares', color='blue',
-#                      alpha=1, linewidth=4, linestyle="-")
+    # plt.ylim([-30, 0])
+    # add manual symbols to auto legend
+    handles.extend([linepriormean, lineleast, lineleast30, linetruth])
 
-# # plt.ylim([-30, 0])
-# # add manual symbols to auto legend
-# handles.extend([linepriormean, lineleast, lineleast30, linetruth])
+    axs.legend(handles=handles)
+    fig.set_rasterized(True)
 
-# axs.legend(handles=handles)
-# fig.set_rasterized(True)
+    # Saving
+    fig_name1 = wellnestlist[0] + "_-AxPump.png"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="png")
 
-# # Saving
-# fig_name1 = wellnestlist[0] + "_-AxPump.png"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="png")
+    fig_name1 = wellnestlist[0] + "_-AxPump.eps"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="eps")
 
-# fig_name1 = wellnestlist[0] + "_-AxPump.eps"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="eps")
+    # %% Norm Pumping during obs
 
-# # %% Norm Pumping during obs
+    fig, axs = plt.subplots(1, 1, figsize=(16, 5))
 
-# fig, axs = plt.subplots(1, 1, figsize=(16, 5))
+    # Pumping subset
+    obs_index = gw_obs_indices[1]
 
-# # Pumping subset
-# obs_index = gw_obs_indices[1]
+    pump_index2 = annual_pump[
+        np.logical_and(
+            annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
+    pump_indices2 = np.logical_and(
+        annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
 
-# pump_index2 = annual_pump[
-#     np.logical_and(
-#         annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])]
-# pump_indices2 = np.logical_and(
-#     annual_pump.index >= obs_index[0], annual_pump.index <= obs_index.iloc[-1])
+    data = pumptrue[pump_indices].iloc[:, -1]
+    min_data = np.min(data)
+    max_data = np.max(data)
 
-# data = pumptrue[pump_indices].iloc[:, -1]
-# min_data = np.min(data)
-# max_data = np.max(data)
+    norm_data = (data - min_data)/(max_data - min_data)
+    axs.plot(pump_index.index, norm_data,
+             color="c", linewidth=4,
+             marker="o")
 
-# norm_data = (data - min_data)/(max_data - min_data)
-# axs.plot(pump_index.index, norm_data,
-#          color="c", linewidth=4,
-#          marker="o")
+    # Ordinary least squares
+    data = pd.Series(list(compress(np.exp(pump_mean), pump_indices2)))
+    min_data = np.min(data)
+    max_data = np.max(data)
 
-# # Ordinary least squares
-# data = pd.Series(list(compress(np.exp(pump_mean), pump_indices2)))
-# min_data = np.min(data)
-# max_data = np.max(data)
+    norm_data = (data - min_data)/(max_data - min_data)
+    axs.plot(annual_pump.index[
+        pump_indices2], norm_data, color="fuchsia", alpha=1, linewidth=4, linestyle="--")
 
-# norm_data = (data - min_data)/(max_data - min_data)
-# axs.plot(annual_pump.index[
-#     pump_indices2], norm_data, color="fuchsia", alpha=1, linewidth=4, linestyle="--")
+    # Reg least squares
+    # data = pd.Series(list(compress(np.exp(pump_mean30), pump_indices2)))
+    # min_data = np.min(data)
+    # max_data = np.max(data)
 
-# # Reg least squares
-# # data = pd.Series(list(compress(np.exp(pump_mean30), pump_indices2)))
-# # min_data = np.min(data)
-# # max_data = np.max(data)
+    # norm_data = (data - min_data)/(max_data - min_data)
+    # axs.plot(annual_pump.index[
+    #     pump_indices2], norm_data, color="blue", alpha=1, linewidth=4, linestyle="-")
 
-# # norm_data = (data - min_data)/(max_data - min_data)
-# # axs.plot(annual_pump.index[
-# #     pump_indices2], norm_data, color="blue", alpha=1, linewidth=4, linestyle="-")
+    # Initial values
+    data = pump_mean_init.iloc[pump_indices2, 0]
+    min_data = np.min(data)
+    max_data = np.max(data)
 
-# # Initial values
-# data = pd.Series(list(compress(np.exp(pump_mean_init), pump_indices2)))
-# min_data = np.min(data)
-# max_data = np.max(data)
+    norm_data = (data - min_data)/(max_data - min_data)
+    axs.plot(annual_pump.index[
+        pump_indices2], norm_data, color="red", alpha=.3, linewidth=4, linestyle="-")
+    plt.show()
+    axs.set_ylabel("Normalized Pumping")
+    axs.set_xlabel("Date")
 
-# norm_data = (data - min_data)/(max_data - min_data)
-# axs.plot(annual_pump.index[
-#     pump_indices2], norm_data, color="red", alpha=.3, linewidth=4, linestyle="-")
-# plt.show()
-# axs.set_ylabel("Normalized Pumping")
-# axs.set_xlabel("Date")
+    # access legend objects automatically created from data
+    handles, labels = axs.get_legend_handles_labels()
 
-# # access legend objects automatically created from data
-# handles, labels = axs.get_legend_handles_labels()
+    # Adding lines for ensemble members
+    linepriormean = Line2D([0], [0], label='Initial', color='red',
+                           alpha=.3, linewidth=4)
+    lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
+                       alpha=1, linewidth=4, linestyle="--")
+    lineRLS = Line2D([0], [0], label="Regularized Least Squares", color='blue',
+                     alpha=1, linewidth=4, linestyle="-")
+    linetruth = Line2D([0], [0], label='Truth', color='cyan',
+                       alpha=.8, linewidth=4)
 
-# # Adding lines for ensemble members
-# linepriormean = Line2D([0], [0], label='Initial', color='red',
-#                        alpha=.3, linewidth=4)
-# lineleast = Line2D([0], [0], label="Ordinary Least Squares", color='fuchsia',
-#                    alpha=1, linewidth=4, linestyle="--")
-# lineRLS = Line2D([0], [0], label="Regularized Least Squares", color='blue',
-#                  alpha=1, linewidth=4, linestyle="-")
-# linetruth = Line2D([0], [0], label='Truth', color='cyan',
-#                    alpha=.8, linewidth=4)
+    # plt.ylim([-30, 0])
+    # add manual symbols to auto legend
+    handles.extend([linepriormean, lineleast, lineRLS, linetruth])
 
-# # plt.ylim([-30, 0])
-# # add manual symbols to auto legend
-# handles.extend([linepriormean, lineleast, lineRLS, linetruth])
+    axs.legend(handles=handles)
+    fig.set_rasterized(True)
 
-# axs.legend(handles=handles)
-# fig.set_rasterized(True)
+    # Saving
+    fig_name1 = wellnestlist[0] + "_normPump.png"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="png")
 
-# # Saving
-# fig_name1 = wellnestlist[0] + "_normPump.png"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="png")
-
-# fig_name1 = wellnestlist[0] + "_normPump.eps"
-# full_figpath = os.path.join(figpath, fig_name1)
-# plt.savefig(full_figpath, bbox_inches="tight", format="eps")
+    fig_name1 = wellnestlist[0] + "_normPump.eps"
+    full_figpath = os.path.join(figpath, fig_name1)
+    plt.savefig(full_figpath, bbox_inches="tight", format="eps")

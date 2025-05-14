@@ -1,0 +1,32 @@
+[[Fit Statistics]]
+    # fitting method   = least_squares
+    # function evals   = 7
+    # data points      = 196
+    # variables        = 6
+    chi-square         = 3.0079e-12
+    reduced chi-square = 1.5831e-14
+    Akaike info crit   = -6222.34732
+    Bayesian info crit = -6202.67863
+[[Variables]]
+    well_A0:     -0.01109262 +/- 0.06325365 (570.23%) (init = -0.01109262)
+    well_n0:      0.61841013 +/- 115.351765 (18652.96%) (init = 0.6184101)
+    well_a0:      23.2462699 +/- 3948.66362 (16986.22%) (init = 23.24627)
+    constant_d0:  2.15055394 +/- 14.4570506 (672.25%) (init = 2.150554)
+    SsK0:         2.64941777 +/- 5.25335261 (198.28%) (init = 2.649418)
+    SsK1:         2.11069574 +/- 14.5267397 (688.24%) (init = 2.110696)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(well_A0, constant_d0) = -0.9887
+    C(well_n0, well_a0)     = -0.9850
+    C(constant_d0, SsK0)    = -0.9650
+    C(well_A0, SsK0)        = +0.9533
+    C(well_n0, SsK1)        = +0.9389
+    C(well_a0, SsK1)        = -0.8909
+    C(well_A0, SsK1)        = +0.6802
+    C(well_A0, well_a0)     = -0.6519
+    C(constant_d0, SsK1)    = -0.6260
+    C(well_A0, well_n0)     = +0.5986
+    C(well_a0, constant_d0) = +0.5817
+    C(well_n0, constant_d0) = -0.5280
+    C(SsK0, SsK1)           = +0.4354
+    C(well_a0, SsK0)        = -0.4150
+    C(well_n0, SsK0)        = +0.3400

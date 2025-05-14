@@ -119,7 +119,7 @@ pumpexperiment = "simpleexp"
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat_newobs//")
+    modelpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # Pumping response function
 pump_rfunc = ps.Gamma()
@@ -157,7 +157,7 @@ def gamma_block(A, n, a, cutoff=0.999):
 
 
 # True parameters for Pastas and subsidence mult (a, b, c)
-Atrue = -.1
+Atrue = -1
 ntrue = 1.2
 atrue = 50
 dtrue = 2
@@ -241,7 +241,7 @@ for wells in well_names:
     well_name = wells
 
     # Adding nosie
-    obs_std = 0.5
+    obs_std = 0
     noise = random_seed.normal(
         0, obs_std, len(head_pump)) * np.std(head_pump.values) * 0.5
     head_pump_noise = head_pump[0] + noise
@@ -253,7 +253,7 @@ for wells in well_names:
         head_pump_noise.index >= calitime_min, head_pump_noise.index <= calitime_max)]
 
     # Random heads for only sample size
-    obs_sample = 300
+    obs_sample = 150
     head_pump_noise = head_pump_noise.sample(obs_sample).sort_index()
 
     gw_obs_list.append(full_obshead)
@@ -290,7 +290,7 @@ for wells in well_names:
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//cowboyhat_newobs//perfect")
+    modelpath = os.path.abspath("models//cowboyhat_SUBGW//perfect")
 
 # For all wells in well nest
 for wells in well_names:
@@ -369,7 +369,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cowboyhat_newobs//")
+        mpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 0
@@ -441,7 +441,7 @@ syndata = pd.DataFrame()
 obssyndata = pd.DataFrame()
 
 # Subsidence error
-sub_error = .75
+sub_error = 0
 
 # Preallocation for truth
 truth = []
@@ -515,27 +515,27 @@ for num_well, wellnest in enumerate(wellnestlist):
 
     for idx, value in enumerate(syndata[wellnest]):
 
-        if ~np.isnan(value):
+        # if ~np.isnan(value):
 
-            matchdate = plot_data.date_x == syndata.index[idx]
+        matchdate = plot_data.date_x == syndata.index[idx]
 
-            if any(matchdate):
+        if any(matchdate):
 
-                syndata[wellnest][idx] = plot_data.AnnRates[
-                    matchdate]
+            syndata[wellnest][idx] = plot_data.AnnRates[
+                matchdate]
 
     obssyndata[wellnest] = bench.iloc[:, 0]
     for idx, value in enumerate(obssyndata[wellnest]):
 
-        if ~np.isnan(value):
+        # if ~np.isnan(value):
 
-            matchdate = plot_data.date_x == obssyndata.index[idx]
+        matchdate = plot_data.date_x == obssyndata.index[idx]
 
-            if any(matchdate):
+        if any(matchdate):
 
-                obssyndata[wellnest][idx] = plot_data.AnnRates[
-                    matchdate] + np.random.normal(0, abs(sub_error *
-                                                  np.mean(plot_data.AnnRates)))
+            obssyndata[wellnest][idx] = plot_data.AnnRates[
+                matchdate] + np.random.normal(0, abs(sub_error *
+                                              np.mean(plot_data.AnnRates)))
 
     syndata["Year"] = syndata.index.year
     syndata = syndata.rename(columns={wellnest: 'Land_' + wellnest})
@@ -592,7 +592,7 @@ gw_obs_df = pd.concat(gw_obs_list)
 # Simple
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//cowboyhat_newobs//")
+    savepath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # GW obs
 fig_name1 = wellnestlist[0] + "_GWObs_Full.csv"
@@ -618,7 +618,7 @@ obssyndata.dropna().iloc[:, 0].to_csv(full_figpath, index=True, sep='\t')
 # Full sub obs
 fig_name1 = wellnestlist[0] + "_SubObs_Full.csv"
 full_figpath = os.path.join(savepath, fig_name1)
-annual_data[0][1].dropna().iloc[:, 0].to_csv(full_figpath, index=True, sep='\t')
+annual_data[0][1].dropna().iloc[:, -1].to_csv(full_figpath, index=True, sep='\t')
 # Sub truth
 fig_name1 = wellnestlist[0] + "_SubTruth.csv"
 full_figpath = os.path.join(savepath, fig_name1)

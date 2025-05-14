@@ -111,10 +111,12 @@ def generate_pumping_ens(ann_pump, n, pumpexperiment):
 wellnestlist = ["LCBKK018"]
 
 pumpexperiment = "pumpingcase1"
+# esmdaflag = "ls_gwparam_subSELECT_pump"
+esmdaflag = "ls_gwparam_subSELECT"
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//bangkok-based_newobs//")
+    path = os.path.abspath("models//bangkok_SUBGW//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -129,19 +131,21 @@ gw_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
 gw_obs.Date = pd.to_datetime(gw_obs.Date, format="%Y-%m-%d")
 gw_obs.index = gw_obs.Date
 
-fig_name1 = wellnestlist[0] + "_SubObs.csv"
-full_figpath = os.path.join(path, fig_name1)
-sub_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
-sub_obs.Date = pd.to_datetime(sub_obs.Date, format="%Y-%m-%d")
-sub_obs.index = sub_obs.Date
 # Saving truth
 truth = []
-fig_name1 = wellnestlist[0] + "_SubTruth.csv"
-full_figpath = os.path.join(path, fig_name1)
-truth_temp = pd.read_csv(full_figpath, delim_whitespace="\t")
-truth_temp.Date = pd.to_datetime(truth_temp.Date, format="%Y-%m-%d")
-truth_temp.index = truth_temp.Date
-truth.append(truth_temp)
+if "sub" in esmdaflag:
+    fig_name1 = wellnestlist[0] + "_SubObs.csv"
+    full_figpath = os.path.join(path, fig_name1)
+    sub_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
+    sub_obs.Date = pd.to_datetime(sub_obs.Date, format="%Y-%m-%d")
+    sub_obs.index = sub_obs.Date
+
+    fig_name1 = wellnestlist[0] + "_SubTruth.csv"
+    full_figpath = os.path.join(path, fig_name1)
+    truth_temp = pd.read_csv(full_figpath, delim_whitespace="\t")
+    truth_temp.Date = pd.to_datetime(truth_temp.Date, format="%Y-%m-%d")
+    truth_temp.index = truth_temp.Date
+    truth.append(truth_temp)
 
 fig_name1 = wellnestlist[0] + "_GWTruth.csv"
 full_figpath = os.path.join(path, fig_name1)
@@ -186,34 +190,66 @@ dtrue = 2
 calitime_min = "1978"
 calitime_max = "2005"
 
-# Creating observations for LS
-dobs = pd.Series(np.empty(1, dtype=object))
-tempdata = sub_obs[sub_obs.index <= "1996"].iloc[:, -1]
-dobs = pd.concat([dobs, tempdata])
-# Saving gw dates
-gw_obs_indices = [tempdata.index]
-tempdata = gw_obs[gw_obs.index <= calitime_max].iloc[:, -1]
-tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
-dobs = pd.concat([dobs, tempdata])
-dobs = dobs[1:]
+if "sub" in esmdaflag:
+    # Creating observations for LS
+    dobs = pd.Series(np.empty(1, dtype=object))
+    tempdata = sub_obs.iloc[:, -1]
+    # tempdata = sub_obs[sub_obs.index <= "1996"].iloc[:, -1]
+    dobs = pd.concat([dobs, tempdata])
+    # Saving sub dates
+    gw_obs_indices = [tempdata.index]
+    if "gw" in esmdaflag:
 
-# Reading in groundwater data
-# Total path
-tot_path = os.path.abspath("inputs")
-full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
-data = pd.read_excel(full_path, skiprows=3)
+        # Saving gw dates
+        tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
+        tempdata = tempdata[tempdata.index <= calitime_max]
+        dobs = pd.concat([dobs, tempdata])
 
-# Well names
-well_names = data.columns[-(len(data.columns)-2):]
-num_wells = len(well_names)
+        # Reading in groundwater data
+        # Total path
+        tot_path = os.path.abspath("inputs")
+        full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
+        data = pd.read_excel(full_path, skiprows=3)
 
-for well_i in range(num_wells):
+        # Well names
+        well_names = data.columns[-(len(data.columns)-2):]
+        num_wells = len(well_names)
+        for well_i in range(num_wells):
 
-    tempdata = gw_obs.Date[well_i*int(
-        len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
-    tempdata = tempdata[tempdata <= calitime_max]
-    tempdata = tempdata[tempdata >= calitime_min]
-    gw_obs_indices.append(tempdata)
+            tempdata = gw_obs.Date[well_i*int(
+                len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
+            tempdata = tempdata[tempdata <= calitime_max]
+            tempdata = tempdata[tempdata >= calitime_min]
+            gw_obs_indices.append(tempdata)
+
+    dobs = dobs[1:]
+
+else:
+    # Creating observations for LS
+    dobs = pd.Series(np.empty(1, dtype=object))
+    # Saving gw dates
+    tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
+    tempdata = tempdata[tempdata.index <= calitime_max]
+    dobs = pd.concat([dobs, tempdata])
+    dobs = dobs[1:]
+
+    # Reading in groundwater data
+    # Total path
+    tot_path = os.path.abspath("inputs")
+    full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
+    data = pd.read_excel(full_path, skiprows=3)
+
+    # Well names
+    well_names = data.columns[-(len(data.columns)-2):]
+    num_wells = len(well_names)
+    gw_obs_indices = []
+    for well_i in range(num_wells):
+
+        tempdata = gw_obs.Date[well_i*int(
+            len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
+        tempdata = tempdata[tempdata <= calitime_max]
+        tempdata = tempdata[tempdata >= calitime_min]
+        gw_obs_indices.append(tempdata)
 
 Wellnest_name = wellnestlist[0]
 
@@ -245,7 +281,7 @@ if mode == "Pastas":
 
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//bangkok-based_newobs//")
+        mpath = os.path.abspath("models//bangkok_SUBGW//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
@@ -289,8 +325,6 @@ param_index = np.array([0, 1, 2, 3])
 par_error = [30, 100, 100, 30]
 dist = ["norm", "norm", "norm", "norm"]
 
-esmdaflag = "ls_gwparam_subSELECT_pump"
-
 # Generate pumping ensemble
 option = ["normal", .99]
 
@@ -299,15 +333,20 @@ pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
 pumping_ens = generate_pumping_ens(annual_pump, ne, pumpexperiment)
 
-if pumpexperiment == "pumpingcase1":
-    comppump = listdaily_pump.copy()
-    comppump = comppump[comppump.index <= "2023"]
+if "sub" in esmdaflag:
+    pumping_ens = None
+    comppump = pumptrue
+elif "pump" in esmdaflag:
 
-# Cyclical pump
-elif pumpexperiment == "cyclical":
-    comppump = generate_pumping_ens(listdaily_pump, ne, pumpexperiment)
-    comppump = comppump.rename(columns={0: "Pump"})
-lambda_ = 0.1
+    if pumpexperiment == "pumpingcase1":
+        comppump = listdaily_pump.copy()
+        comppump = comppump[comppump.index <= "2023"]
+    
+    # Cyclical pump
+    elif pumpexperiment == "cyclical":
+        comppump = generate_pumping_ens(listdaily_pump, ne, pumpexperiment)
+        comppump = comppump.rename(columns={0: "Pump"})
+lambda_ = 0
 # Number of ensembles
 n = 1
 for n_ens in range(n):
@@ -345,13 +384,10 @@ for n_ens in range(n):
                                                            listdaily_pump=comppump,
                                                            lambda_=lambda_)
 
-lmfit.fit_report(ls_sub_m)
-ls_sub_m.params.pretty_print()
-
-# save fit report to a file:
-with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
-          str(lambda_*100) + '_modelresult.txt', 'w') as fh:
-    fh.write(lmfit.fit_report(ls_sub_m))
+    # save fit report to a file:
+    with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
+              str(lambda_*100) + '_modelresult' + str(n_ens) + '.txt', 'w') as fh:
+        fh.write(lmfit.fit_report(ls_sub_m))
 
 et = time.time()
 et2 = time.process_time()

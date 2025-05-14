@@ -1,0 +1,17 @@
+[[Fit Statistics]]
+    # fitting method   = least_squares
+    # function evals   = 332
+    # data points      = 136
+    # variables        = 4
+    chi-square         = 5.3254e-12
+    reduced chi-square = 4.0344e-14
+    Akaike info crit   = -4190.48095
+    Bayesian info crit = -4178.83033
+[[Variables]]
+    well_A0:     -1.00000600 +/- 2.0220e-18 (0.00%) (init = -0.009249092)
+    constant_d0:  2.00065298 +/- 3.2047e-05 (0.00%) (init = 1.432551)
+    SsK0:         3.67997803 +/- 1.3847e-04 (0.00%) (init = 14.1458)
+    SsK1:         4.79997005 +/- 9.9985e-04 (0.02%) (init = 8.253982)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(well_A0, SsK0) = -0.7510
+    C(well_A0, SsK1) = -0.5077

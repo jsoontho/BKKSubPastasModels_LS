@@ -165,12 +165,12 @@ def generate_cycpumping(ann_pump):
 save_model = 1
 
 # Pumping experiment
-pumpexperiment = "cyclical"
+pumpexperiment = "pumpingcase1"
 
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based_newobs//")
+    modelpath = os.path.abspath("models//bangkok_SUBGW//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -320,7 +320,7 @@ for wells in well_names:
     well_name = wells
 
     # Adding nosie
-    obs_std = 0.5
+    obs_std = 0
     noise = random_seed.normal(
         0, obs_std, len(head_pump)) * np.std(head_pump.values) * 0.5
     head_pump_noise = head_pump[0] + noise
@@ -357,7 +357,7 @@ for wells in well_names:
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    modelpath = os.path.abspath("models//bangkok-based_newobs//perfect")
+    modelpath = os.path.abspath("models//bangkok_SUBGW//perfect")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":
@@ -440,7 +440,7 @@ if mode == "Pastas":
 
     if pumpexperiment == "pumpingcase1":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//bangkok-based_newobs//")
+        mpath = os.path.abspath("models//bangkok_SUBGW//")
 
     # Cyclical pump
     elif pumpexperiment == "cyclical":
@@ -499,7 +499,7 @@ syndata = pd.DataFrame()
 obssyndata = pd.DataFrame()
 
 # Subsidence error
-sub_error = .75
+sub_error = 0
 
 # Preallocation for truth
 truth = []
@@ -649,7 +649,7 @@ gw_obs_df = pd.concat(gw_obs_list)
 
 if pumpexperiment == "pumpingcase1":
     # Folder to save/import graph and model
-    savepath = os.path.abspath("models//bangkok-based_newobs//")
+    savepath = os.path.abspath("models//bangkok_SUBGW//")
 
 # Cyclical pump
 elif pumpexperiment == "cyclical":

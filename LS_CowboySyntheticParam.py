@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Thu Sep 12 10:29:28 2024
 
@@ -26,7 +27,7 @@ import numpy as np
 import warnings
 import lmfit
 import time
-import random
+import csv
 
 # Bangkok Subsidence Model Package
 import bkk_sub_gw
@@ -65,7 +66,12 @@ def generate_pumping_ens(ann_pump, n):
 
     for i in range(n):
 
-        y = np.ones(len(ann_pump.index)) * random.randint(0, 500)
+        x = np.linspace(0, len(ann_pump.index)-1, len(ann_pump.index))
+        y = np.ones(len(x))
+        y[0] = 1
+        y *= 50
+        y[30:50] = 125
+        y[50:] = 50
 
         # Dataframe
         mat = pd.DataFrame(y, index=ann_pump.index,
@@ -80,14 +86,15 @@ def generate_pumping_ens(ann_pump, n):
 
 # For each well nest
 wellnestlist = ["LCBKK018"]
-
+esmdaflag = "ls_gwparam_subSELECT"
+# esmdaflag = "ls_sub"
 # Pumping experiment
 pumpexperiment = "simpleexp"
 
 # pumping case 1: true 1980-1990 arbitrarily lower
 if pumpexperiment == "simpleexp":
     # Folder to save/import graph and model
-    path = os.path.abspath("models//cowboyhat_GWPump//")
+    path = os.path.abspath("models//cowboyhat_SUBGW//")
 
 
 # Reading
@@ -97,19 +104,21 @@ gw_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
 gw_obs.Date = pd.to_datetime(gw_obs.Date, format="%Y-%m-%d")
 gw_obs.index = gw_obs.Date
 
-# fig_name1 = wellnestlist[0] + "_SubObs.csv"
-# full_figpath = os.path.join(path, fig_name1)
-# sub_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
-# sub_obs.Date = pd.to_datetime(sub_obs.Date, format="%Y-%m-%d")
-# sub_obs.index = sub_obs.Date
 # Saving truth
 truth = []
-# fig_name1 = wellnestlist[0] + "_SubTruth.csv"
-# full_figpath = os.path.join(path, fig_name1)
-# truth_temp = pd.read_csv(full_figpath, delim_whitespace="\t")
-# truth_temp.Date = pd.to_datetime(truth_temp.Date, format="%Y-%m-%d")
-# truth_temp.index = truth_temp.Date
-# truth.append(truth_temp)
+if "sub" in esmdaflag:
+    fig_name1 = wellnestlist[0] + "_SubObs.csv"
+    full_figpath = os.path.join(path, fig_name1)
+    sub_obs = pd.read_csv(full_figpath, delim_whitespace="\t")
+    sub_obs.Date = pd.to_datetime(sub_obs.Date, format="%Y-%m-%d")
+    sub_obs.index = sub_obs.Date
+
+    fig_name1 = wellnestlist[0] + "_SubTruth.csv"
+    full_figpath = os.path.join(path, fig_name1)
+    truth_temp = pd.read_csv(full_figpath, delim_whitespace="\t")
+    truth_temp.Date = pd.to_datetime(truth_temp.Date, format="%Y-%m-%d")
+    truth_temp.index = truth_temp.Date
+    truth.append(truth_temp)
 
 fig_name1 = wellnestlist[0] + "_GWTruth.csv"
 full_figpath = os.path.join(path, fig_name1)
@@ -148,36 +157,6 @@ saving = 1
 calitime_min = "1978"
 calitime_max = "2005"
 
-# Creating observations for LS
-dobs = pd.Series(np.empty(1, dtype=object))
-# tempdata = sub_obs[sub_obs.index <= "1996"].iloc[:, -1]
-# dobs = pd.concat([dobs, tempdata])
-# # Saving gw dates
-# gw_obs_indices = [tempdata.index]
-# Saving gw dates
-tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
-tempdata = tempdata[tempdata.index <= calitime_max]
-dobs = pd.concat([dobs, tempdata])
-dobs = dobs[1:]
-
-# Reading in groundwater data
-# Total path
-tot_path = os.path.abspath("inputs")
-full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
-data = pd.read_excel(full_path, skiprows=3)
-
-# Well names
-well_names = data.columns[-(len(data.columns)-2):]
-num_wells = len(well_names)
-gw_obs_indices = []
-for well_i in range(num_wells):
-
-    tempdata = gw_obs.Date[well_i*int(
-        len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
-    tempdata = tempdata[tempdata <= calitime_max]
-    tempdata = tempdata[tempdata >= calitime_min]
-    gw_obs_indices.append(tempdata)
-
 Wellnest_name = wellnestlist[0]
 
 tmin = "1978"
@@ -209,7 +188,7 @@ if mode == "Pastas":
     # pumping case 1: true 1980-1990 arbitrarily lower
     if pumpexperiment == "simpleexp":
         # Folder to save/import graph and model
-        mpath = os.path.abspath("models//cowboyhat_GWPump//")
+        mpath = os.path.abspath("models//cowboyhat_SUBGW//")
 
 # Pumping flag, for PASTAS, if changing pumping scenario
 pumpflag = 1
@@ -248,62 +227,163 @@ param_index = np.array([0, 1, 2, 3])
 par_error = [30, 100, 100, 30]
 dist = ["norm", "norm", "norm", "norm"]
 
-esmdaflag = "ls_gwparamSELECT_pump"
-
 # Generate pumping ensemble
 option = ["normal", .99]
 
 # Pumping error in prior
 pump_err = .5
 annual_pump["Std"] = annual_pump['Pump'] * pump_err
-pumping_ens = generate_pumping_ens(annual_pump, ne)
 
-lambda_ = 0.2
+if "sub" in esmdaflag:
+    # Creating observations for LS
+    dobs = pd.Series(np.empty(1, dtype=object))
+    tempdata = sub_obs.iloc[:, -1]
+    # tempdata = sub_obs[sub_obs.index <= "1996"].iloc[:, -1]
+    dobs = pd.concat([dobs, tempdata])
+    # Saving sub dates
+    gw_obs_indices = [tempdata.index]
+    if "gw" in esmdaflag:
+
+        # Saving gw dates
+        tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
+        tempdata = tempdata[tempdata.index <= calitime_max]
+        dobs = pd.concat([dobs, tempdata])
+
+        # Reading in groundwater data
+        # Total path
+        tot_path = os.path.abspath("inputs")
+        full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
+        data = pd.read_excel(full_path, skiprows=3)
+
+        # Well names
+        well_names = data.columns[-(len(data.columns)-2):]
+        num_wells = len(well_names)
+        for well_i in range(num_wells):
+
+            tempdata = gw_obs.Date[well_i*int(
+                len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
+            tempdata = tempdata[tempdata <= calitime_max]
+            tempdata = tempdata[tempdata >= calitime_min]
+            gw_obs_indices.append(tempdata)
+
+    dobs = dobs[1:]
+
+else:
+    # Creating observations for LS
+    dobs = pd.Series(np.empty(1, dtype=object))
+    # Saving gw dates
+    tempdata = gw_obs[gw_obs.index >= calitime_min].iloc[:, -1]
+    tempdata = tempdata[tempdata.index <= calitime_max]
+    dobs = pd.concat([dobs, tempdata])
+    dobs = dobs[1:]
+
+    # Reading in groundwater data
+    # Total path
+    tot_path = os.path.abspath("inputs")
+    full_path = os.path.join(tot_path, wellnestlist[0] + ".xlsx")
+    data = pd.read_excel(full_path, skiprows=3)
+
+    # Well names
+    well_names = data.columns[-(len(data.columns)-2):]
+    num_wells = len(well_names)
+    gw_obs_indices = []
+    for well_i in range(num_wells):
+
+        tempdata = gw_obs.Date[well_i*int(
+            len(gw_obs)/num_wells):(well_i+1)*int(len(gw_obs)/num_wells)]
+        tempdata = tempdata[tempdata <= calitime_max]
+        tempdata = tempdata[tempdata >= calitime_min]
+        gw_obs_indices.append(tempdata)
+
+if "sub" in esmdaflag:
+    pumping_ens = None
+    comppump = pumptrue
+elif "pump" in esmdaflag:
+    pumping_ens = generate_pumping_ens(annual_pump, ne)
+    comppump = generate_pumping_ens(pumptrue, 1)
+
+lambda_ = 0
 # Number of ensembles
 n = 1
 for n_ens in range(n):
-    ls_sub_m, \
-        models, \
-            well_names = bkk_sub_gw.bkk_sub.bkk_subsidence(wellnestlist,
-                                                           mode, tmin,
-                                                           tmax,
-                                                           Thick_data,
-                                                           K_data,
-                                                           Sskv_data,
-                                                           Sske_data,
-                                                           CC=CC,
-                                                           Nz=node_num,
-                                                           ic_run=True,
-                                                           califlag=True,
-                                                           p_multop=p_multop,
-                                                           na=na,
-                                                           ne=ne,
-                                                           obs_error=obs_error,
-                                                           par_error=par_error,
-                                                           return_sub=return_sub,
-                                                           proxyflag=proxyflag,
-                                                           pumpflag=pumpflag,
-                                                           pump_path=None,
-                                                           pump_sheet=None,
-                                                           model_path=mpath,
-                                                           esmdaflag=esmdaflag,
-                                                           esmdaindex=param_index,
-                                                           dist=dist,
-                                                           user_obs=dobs,
-                                                           user_obs_indices=gw_obs_indices,
-                                                           pump_ens=pumping_ens,
-                                                           annual_pump=annual_pump,
-                                                           listdaily_pump=generate_pumping_ens(
-                                                               pumptrue, 1),
-                                                           lambda_=lambda_)
+    if esmdaflag == "ls_sub":
+        ls_sub_m, \
+            models, \
+                well_names, \
+                    costfc = bkk_sub_gw.bkk_sub.bkk_subsidence(wellnestlist,
+                                                               mode, tmin,
+                                                               tmax,
+                                                               Thick_data,
+                                                               K_data,
+                                                               Sskv_data,
+                                                               Sske_data,
+                                                               CC=CC,
+                                                               Nz=node_num,
+                                                               ic_run=True,
+                                                               califlag=True,
+                                                               p_multop=p_multop,
+                                                               na=na,
+                                                               ne=ne,
+                                                               obs_error=obs_error,
+                                                               par_error=par_error,
+                                                               return_sub=return_sub,
+                                                               proxyflag=proxyflag,
+                                                               pumpflag=pumpflag,
+                                                               pump_path=None,
+                                                               pump_sheet=None,
+                                                               model_path=mpath,
+                                                               esmdaflag=esmdaflag,
+                                                               esmdaindex=param_index,
+                                                               dist=dist,
+                                                               user_obs=dobs,
+                                                               user_obs_indices=gw_obs_indices,
+                                                               pump_ens=pumping_ens,
+                                                               annual_pump=annual_pump,
+                                                               listdaily_pump=comppump,
+                                                               lambda_=lambda_)
+        with open(mpath + "//" + "costfc.csv", "w") as f:
+            costfc = np.array(costfc).T
+            wr = csv.writer(f)
+            wr.writerows(costfc)
+    else:
+        ls_sub_m, \
+            models, \
+                well_names = bkk_sub_gw.bkk_sub.bkk_subsidence(wellnestlist,
+                                                               mode, tmin,
+                                                               tmax,
+                                                               Thick_data,
+                                                               K_data,
+                                                               Sskv_data,
+                                                               Sske_data,
+                                                               CC=CC,
+                                                               Nz=node_num,
+                                                               ic_run=True,
+                                                               califlag=True,
+                                                               p_multop=p_multop,
+                                                               na=na,
+                                                               ne=ne,
+                                                               obs_error=obs_error,
+                                                               par_error=par_error,
+                                                               return_sub=return_sub,
+                                                               proxyflag=proxyflag,
+                                                               pumpflag=pumpflag,
+                                                               pump_path=None,
+                                                               pump_sheet=None,
+                                                               model_path=mpath,
+                                                               esmdaflag=esmdaflag,
+                                                               esmdaindex=param_index,
+                                                               dist=dist,
+                                                               user_obs=dobs,
+                                                               user_obs_indices=gw_obs_indices,
+                                                               pump_ens=pumping_ens,
+                                                               annual_pump=annual_pump,
+                                                               listdaily_pump=comppump,
+                                                               lambda_=lambda_)
 
-lmfit.fit_report(ls_sub_m)
-ls_sub_m.params.pretty_print()
-
-# save fit report to a file:
-with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
-          str(lambda_*100) + '_modelresult.txt', 'w') as fh:
-    fh.write(lmfit.fit_report(ls_sub_m))
+    # save fit report to a file:
+    with open(mpath + "//" + wellnestlist[0] + '_LSreg' +
+              str(lambda_*100) + '_modelresult' + str(n_ens) + '.txt', 'w') as fh:
+        fh.write(lmfit.fit_report(ls_sub_m))
 
 et = time.time()
 et2 = time.process_time()
